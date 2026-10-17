@@ -51,9 +51,9 @@ namespace ReportingModule.Web
     if(f.Kind=="decimal")
     {
      decimal number;
-     if(!decimal.TryParse(v,NumberStyles.AllowLeadingSign|NumberStyles.AllowDecimalPoint,CultureInfo.InvariantCulture,out number)
+     if(!NumberParser.TryParse(v,out number)
        || number<0 || number>999999999999999.9999m || decimal.Round(number,4)!=number)
-      throw new ArgumentException(f.Label+": số không âm, tối đa 15 chữ số nguyên và 4 chữ số thập phân (dấu chấm).");
+      throw new ArgumentException(f.Label+": số không âm, tối đa 15 chữ số nguyên và 4 chữ số thập phân. "+NumberParser.Hint);
      result[i]=number;
     }
     else if(f.Kind=="date")

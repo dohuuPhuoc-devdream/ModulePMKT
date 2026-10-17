@@ -35,7 +35,7 @@ namespace ReportingModule.Web
   {
    using(var c=Open()) using(var cmd=new SqlCommand(sql,c)) { cmd.Parameters.AddRange(args); var dt=new DataTable(); using(var da=new SqlDataAdapter(cmd)) da.Fill(dt); return dt; }
   }
-  public DataTable Units() { var id=CurrentIdentity.CurrentUserId();return id.HasValue?UnitAccess.Table(id.Value):Query("SELECT MaDonVi,TenDonVi,NgayBatDau FROM dbo.DonVi ORDER BY MaDonVi"); }
+  public DataTable Units() { var current=UnitAccess.CurrentTable();return current??Query("SELECT MaDonVi,TenDonVi,NgayBatDau FROM dbo.DonVi ORDER BY MaDonVi"); }
   public DataTable Accounts() { return Query("SELECT t.MaTK,t.TenTK FROM dbo.TaiKhoan t JOIN dbo.TaiKhoanBaoCao m ON m.MaTK=t.MaTK ORDER BY m.ThuTu"); }
   public static DateTime Date(string text)
   {
@@ -52,9 +52,8 @@ namespace ReportingModule.Web
     if(row==null||row.Length!=3) throw new ArgumentException("Chi tiết không hợp lệ.");
     if(row.All(string.IsNullOrWhiteSpace)) continue;
     decimal q,p;
-    if(!decimal.TryParse(row[1],NumberStyles.AllowLeadingSign|NumberStyles.AllowDecimalPoint,CultureInfo.InvariantCulture,out q)
-     ||!decimal.TryParse(row[2],NumberStyles.AllowLeadingSign|NumberStyles.AllowDecimalPoint,CultureInfo.InvariantCulture,out p))
-      throw new ArgumentException("Nợ/Có phải là số dùng dấu chấm thập phân; bên không phát sinh nhập 0.");
+    if(!NumberParser.TryParse(row[1],out q)||!NumberParser.TryParse(row[2],out p))
+      throw new ArgumentException("Nợ/Có không đúng định dạng. "+NumberParser.Hint+" Bên không phát sinh nhập 0.");
     lines.Add(new JournalLine((row[0]??"").Trim(),q,p));
    }
    ValidateLines(lines); return lines;

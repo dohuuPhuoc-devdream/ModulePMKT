@@ -1,4 +1,4 @@
-Current state: setup applies migrations through 007-security.sql (schema version 6). Inventory, commerce, payments, manual ledger, authentication, permissions, unit access and audit schema are implemented. The phase notes below retain the schema history; see ../README.md for current application setup.
+Current state: setup applies migrations through 009-purchase-receipt-invoice-uniqueness.sql (schema version 8). Inventory, commerce, payments, manual ledger, authentication, permissions, unit access and audit schema are implemented. The phase notes below retain the schema history; see ../README.md for current application setup.
 
 # SQL Server schema and synthetic seed
 
@@ -113,7 +113,7 @@ verifies 130, and rejects issue 200 atomically. The Phase 3–9 regression run a
 independent SQL checks pass this acceptance on the local demo database.
 
 ## Phase 5 upgrade
-setup.sql includes 004-commerce.sql (schema version 3) and the current workflow correction in 008-purchase-workflow.sql (version 7). Sales invoices create one linked warehouse issue. Purchase receipts carry supplier and change stock; purchase invoices link to a receipt and do not change stock again. Orders do not affect stock. See [Phase 5 defaults](../docs/PHASE5.md). Existing demo stock documents are preserved; legacy combined purchase facts are linked by migration without replaying their stock effect.
+setup.sql includes 004-commerce.sql (schema version 3), 008-purchase-workflow.sql (version 7), and 009-purchase-receipt-invoice-uniqueness.sql (version 8). Sales invoices create one linked warehouse issue. Purchase receipts carry supplier and change stock; each receipt can be referenced by at most one purchase invoice, and invoices do not change stock again. Orders do not affect stock. See [Phase 5 defaults](../docs/PHASE5.md). Existing demo stock documents are preserved; legacy combined purchase facts are linked by migration without replaying their stock effect.
 
 ## Phase 6 upgrade
 setup.sql includes 005-debt.sql (schema version 4). ThanhToanHoaDon stores immutable invoice-level settlements; reports derive partner balances from posted invoices and dated payments. No opening debt or payments are seeded. See [Phase 6 semantics](../docs/PHASE6.md).

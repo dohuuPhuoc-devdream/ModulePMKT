@@ -134,11 +134,11 @@ namespace ReportingModule.Web
    {
     if(ex.Number==2601||ex.Number==2627) message.Text="Mã đã tồn tại; không ghi đè.";
     else if(ex.Number==547) message.Text="Không thể xóa dữ liệu đã được tham chiếu hoặc ghi dữ liệu vi phạm ràng buộc.";
-    else { Trace.Warn("Catalog","SQL operation failed",ex); message.Text="Không thể truy cập dữ liệu. Kiểm tra SQL Server và quyền kết nối rồi thử lại."; }
+    else { Log.Error("Catalog","SQL operation failed",ex); message.Text="Không thể truy cập dữ liệu. Kiểm tra SQL Server và quyền kết nối rồi thử lại."; }
    }
    catch(Exception ex)
    {
-    Trace.Warn("Catalog","Operation failed",ex);
+    Log.Error("Catalog","Operation failed",ex);
     message.Text="Không thể xử lý yêu cầu. File phải đúng mẫu và dữ liệu phải hợp lệ.";
    }
   }

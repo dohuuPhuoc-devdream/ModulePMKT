@@ -21,17 +21,17 @@ namespace ReportingModule.Web
   {
    using(var c=Open())using(var cmd=new SqlCommand(@"SELECT u.UserId,u.Username,u.DisplayName,u.IsEnabled,u.FailedLoginCount,u.LockedUntilUtc,u.LastLoginAtUtc,
     COALESCE(STUFF((SELECT N', '+r.RoleName FROM dbo.AppUserRole ur JOIN dbo.AppRole r ON r.RoleId=ur.RoleId WHERE ur.UserId=u.UserId ORDER BY r.RoleName FOR XML PATH(''),TYPE).value('.','nvarchar(max)'),1,2,N''),N'') AS Roles
-    FROM dbo.AppUser u WHERE (@q=N'' OR u.Username LIKE @like OR u.DisplayName LIKE @like) ORDER BY u.NormalizedUsername",c))
-   {cmd.Parameters.Add("@q",SqlDbType.NVarChar,64).Value=(search??"").Trim();cmd.Parameters.Add("@like",SqlDbType.NVarChar,130).Value="%"+(search??"").Trim()+"%";var t=new DataTable();using(var a=new SqlDataAdapter(cmd))a.Fill(t);return t;}
+    FROM dbo.AppUser u WHERE (@q=N'' OR u.Username LIKE @like ESCAPE '~' OR u.DisplayName LIKE @like ESCAPE '~') ORDER BY u.NormalizedUsername",c))
+   {string q=(search??"").Trim().Replace("~","~~").Replace("%","~%").Replace("_","~_").Replace("[","~[");cmd.Parameters.Add("@q",SqlDbType.NVarChar,64).Value=(search??"").Trim();cmd.Parameters.Add("@like",SqlDbType.NVarChar,130).Value="%"+q+"%";var t=new DataTable();using(var a=new SqlDataAdapter(cmd))a.Fill(t);return t;}
   }
   public DataRow User(Guid id)
   {using(var c=Open())using(var cmd=new SqlCommand("SELECT UserId,Username,DisplayName,IsEnabled,FailedLoginCount,LockedUntilUtc,LastLoginAtUtc FROM dbo.AppUser WHERE UserId=@id",c)){cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;var t=new DataTable();using(var a=new SqlDataAdapter(cmd))a.Fill(t);return t.Rows.Count==0?null:t.Rows[0];}}
   public DataTable Roles()
   {using(var c=Open())using(var cmd=new SqlCommand("SELECT RoleId,RoleCode,RoleName,IsSystem,IsEnabled FROM dbo.AppRole ORDER BY IsSystem DESC,RoleName",c)){var t=new DataTable();using(var a=new SqlDataAdapter(cmd))a.Fill(t);return t;}}
   public string[] UserRoles(Guid id)
-  {using(var c=Open())using(var cmd=new SqlCommand("SELECT r.RoleCode FROM dbo.AppUserRole ur JOIN dbo.AppRole r ON r.RoleId=ur.RoleId WHERE ur.UserId=@id",c)){cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;c.Open();var list=new List<string>();using(var r=cmd.ExecuteReader())while(r.Read())list.Add(r.GetString(0));return list.ToArray();}}
+  {using(var c=Open())using(var cmd=new SqlCommand("SELECT r.RoleCode FROM dbo.AppUserRole ur JOIN dbo.AppRole r ON r.RoleId=ur.RoleId WHERE ur.UserId=@id",c)){cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;var list=new List<string>();using(var r=cmd.ExecuteReader())while(r.Read())list.Add(r.GetString(0));return list.ToArray();}}
   public string[] UserUnits(Guid id)
-  {using(var c=Open())using(var cmd=new SqlCommand("SELECT MaDonVi FROM dbo.AppUserUnit WHERE UserId=@id",c)){cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;c.Open();var list=new List<string>();using(var r=cmd.ExecuteReader())while(r.Read())list.Add(r.GetString(0));return list.ToArray();}}
+  {using(var c=Open())using(var cmd=new SqlCommand("SELECT MaDonVi FROM dbo.AppUserUnit WHERE UserId=@id",c)){cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;var list=new List<string>();using(var r=cmd.ExecuteReader())while(r.Read())list.Add(r.GetString(0));return list.ToArray();}}
   public DataTable Units()
   {using(var c=Open())using(var cmd=new SqlCommand("SELECT MaDonVi,TenDonVi FROM dbo.DonVi ORDER BY MaDonVi",c)){var t=new DataTable();using(var a=new SqlDataAdapter(cmd))a.Fill(t);return t;}}
   public void SaveUser(Guid? id,string username,string displayName,bool enabled,string password,string[] roles,string[] units,Guid actor)
@@ -51,6 +51,15 @@ namespace ReportingModule.Web
      {cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=userId;object value=cmd.ExecuteScalar();if(value==null)throw new ArgumentException("Người dùng không tồn tại.");wasAdmin=Convert.ToInt32(value)==1;}
     }
     bool willAdmin=roles.Contains("Administrator",StringComparer.OrdinalIgnoreCase);
+    // Check the requested roles against the actor's permissions before changing
+    // the target user's assignments. This matters when an actor edits their own
+    // account: checking after replacement would compare against their new roles.
+    foreach(string roleCode in roles)
+    using(var cmd=new SqlCommand(@"SELECT COUNT(*) FROM dbo.AppRole targetRole JOIN dbo.AppRolePermission tp ON tp.RoleId=targetRole.RoleId
+      WHERE targetRole.RoleCode=@role AND targetRole.IsEnabled=1 AND NOT EXISTS(
+       SELECT 1 FROM dbo.AppUserRole actorRole JOIN dbo.AppRole ar ON ar.RoleId=actorRole.RoleId AND ar.IsEnabled=1
+       JOIN dbo.AppRolePermission ap ON ap.RoleId=ar.RoleId AND ap.PermissionCode=tp.PermissionCode WHERE actorRole.UserId=@actor)",c,tx))
+    {cmd.Parameters.Add("@role",SqlDbType.VarChar,40).Value=roleCode;cmd.Parameters.Add("@actor",SqlDbType.UniqueIdentifier).Value=actor;if(Convert.ToInt32(cmd.ExecuteScalar())>0)throw new ArgumentException("Không thể gán vai trò có quyền mà bạn không có.");}
     if((wasAdmin&&!enabled)|| (wasAdmin&&!willAdmin))
     {
      using(var cmd=new SqlCommand("SELECT COUNT(*) FROM dbo.AppUser u JOIN dbo.AppUserRole ur ON ur.UserId=u.UserId JOIN dbo.AppRole r ON r.RoleId=ur.RoleId WHERE u.IsEnabled=1 AND r.IsEnabled=1 AND r.RoleCode='Administrator' AND u.UserId<>@id",c,tx))
@@ -60,16 +69,21 @@ namespace ReportingModule.Web
     {
      using(var cmd=new SqlCommand("UPDATE dbo.AppUser SET Username=@n,NormalizedUsername=@norm,DisplayName=@d,IsEnabled=@enabled,UpdatedAtUtc=SYSUTCDATETIME(),UpdatedBy=@actor,FailedLoginCount=CASE WHEN @enabled=0 THEN FailedLoginCount ELSE 0 END,LockedUntilUtc=CASE WHEN @enabled=0 THEN LockedUntilUtc ELSE NULL END WHERE UserId=@id",c,tx))
      {cmd.Parameters.Add("@n",SqlDbType.NVarChar,64).Value=username;cmd.Parameters.Add("@norm",SqlDbType.NVarChar,64).Value=normalized;cmd.Parameters.Add("@d",SqlDbType.NVarChar,120).Value=displayName;cmd.Parameters.Add("@enabled",SqlDbType.Bit).Value=enabled;cmd.Parameters.Add("@actor",SqlDbType.UniqueIdentifier).Value=actor;cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=userId;cmd.ExecuteNonQuery();}
-     if(hash!=null)using(var cmd=new SqlCommand("UPDATE dbo.AppUser SET PasswordHash=@h,PasswordSalt=@s,HashIterations=@i,HashVersion=@v,MustChangePassword=0,FailedLoginCount=0,LockedUntilUtc=NULL WHERE UserId=@id",c,tx)){AddHash(cmd,hash,salt,userId);cmd.ExecuteNonQuery();}
+     if(hash!=null)using(var cmd=new SqlCommand("UPDATE dbo.AppUser SET PasswordHash=@h,PasswordSalt=@s,HashIterations=@i,HashVersion=@v,MustChangePassword=1,FailedLoginCount=0,LockedUntilUtc=NULL WHERE UserId=@id",c,tx)){AddHash(cmd,hash,salt,userId);cmd.ExecuteNonQuery();}
      using(var cmd=new SqlCommand("DELETE dbo.AppUserRole WHERE UserId=@id; DELETE dbo.AppUserUnit WHERE UserId=@id",c,tx)){cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=userId;cmd.ExecuteNonQuery();}
     }
     else
     {
-     using(var cmd=new SqlCommand("INSERT dbo.AppUser(UserId,Username,NormalizedUsername,PasswordHash,PasswordSalt,HashIterations,HashVersion,DisplayName,IsEnabled,CreatedBy) VALUES(@id,@n,@norm,@h,@s,@i,@v,@d,@enabled,@actor)",c,tx))
+     using(var cmd=new SqlCommand("INSERT dbo.AppUser(UserId,Username,NormalizedUsername,PasswordHash,PasswordSalt,HashIterations,HashVersion,DisplayName,IsEnabled,MustChangePassword,CreatedBy) VALUES(@id,@n,@norm,@h,@s,@i,@v,@d,@enabled,1,@actor)",c,tx))
      {cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=userId;cmd.Parameters.Add("@n",SqlDbType.NVarChar,64).Value=username;cmd.Parameters.Add("@norm",SqlDbType.NVarChar,64).Value=normalized;AddHash(cmd,hash,salt,userId);cmd.Parameters.Add("@d",SqlDbType.NVarChar,120).Value=displayName;cmd.Parameters.Add("@enabled",SqlDbType.Bit).Value=enabled;cmd.Parameters.Add("@actor",SqlDbType.UniqueIdentifier).Value=actor;cmd.ExecuteNonQuery();}
     }
     foreach(string code in roles)using(var cmd=new SqlCommand("INSERT dbo.AppUserRole(UserId,RoleId,AssignedBy) SELECT @u,RoleId,@actor FROM dbo.AppRole WHERE RoleCode=@role AND IsEnabled=1",c,tx)){cmd.Parameters.Add("@u",SqlDbType.UniqueIdentifier).Value=userId;cmd.Parameters.Add("@actor",SqlDbType.UniqueIdentifier).Value=actor;cmd.Parameters.Add("@role",SqlDbType.VarChar,40).Value=code;if(cmd.ExecuteNonQuery()!=1)throw new ArgumentException("Vai trò không hợp lệ hoặc đã khóa.");}
     foreach(string code in units)using(var cmd=new SqlCommand("INSERT dbo.AppUserUnit(UserId,MaDonVi,AssignedBy) SELECT @u,MaDonVi,@actor FROM dbo.DonVi WHERE MaDonVi=@unit",c,tx)){cmd.Parameters.Add("@u",SqlDbType.UniqueIdentifier).Value=userId;cmd.Parameters.Add("@actor",SqlDbType.UniqueIdentifier).Value=actor;cmd.Parameters.Add("@unit",SqlDbType.VarChar,20).Value=code;if(cmd.ExecuteNonQuery()!=1)throw new ArgumentException("Đơn vị không hợp lệ.");}
+    using(var cmd=new SqlCommand(@"SELECT COUNT(*) FROM dbo.AppUserRole targetRole JOIN dbo.AppRole tr ON tr.RoleId=targetRole.RoleId AND tr.IsEnabled=1
+      JOIN dbo.AppRolePermission tp ON tp.RoleId=tr.RoleId WHERE targetRole.UserId=@target AND NOT EXISTS(
+       SELECT 1 FROM dbo.AppUserRole actorRole JOIN dbo.AppRole ar ON ar.RoleId=actorRole.RoleId AND ar.IsEnabled=1
+       JOIN dbo.AppRolePermission ap ON ap.RoleId=ar.RoleId AND ap.PermissionCode=tp.PermissionCode WHERE actorRole.UserId=@actor)",c,tx))
+    {cmd.Parameters.Add("@target",SqlDbType.UniqueIdentifier).Value=userId;cmd.Parameters.Add("@actor",SqlDbType.UniqueIdentifier).Value=actor;if(Convert.ToInt32(cmd.ExecuteScalar())>0)throw new ArgumentException("Không thể gán cho tài khoản quyền mà bạn không có.");}
     IdentityStore.WriteAudit(c,tx,actor,ActorName(c,tx,actor),null,"SYSTEM","ADMIN_USERS",id.HasValue?"UPDATE":"CREATE","SUCCESS",id.HasValue?"Cập nhật tài khoản người dùng.":"Tạo tài khoản người dùng.",username);
     tx.Commit();
    }
@@ -83,12 +97,16 @@ namespace ReportingModule.Web
   public DataTable Permissions()
   {using(var c=Open())using(var cmd=new SqlCommand("SELECT PermissionCode,ModuleCode,FunctionCode,ActionCode,DisplayName,SortOrder FROM dbo.AppPermission ORDER BY ModuleCode,FunctionCode,SortOrder",c)){var t=new DataTable();using(var a=new SqlDataAdapter(cmd))a.Fill(t);return t;}}
   public string[] RolePermissions(int role)
-  {using(var c=Open())using(var cmd=new SqlCommand("SELECT PermissionCode FROM dbo.AppRolePermission WHERE RoleId=@r",c)){cmd.Parameters.Add("@r",SqlDbType.Int).Value=role;c.Open();var list=new List<string>();using(var r=cmd.ExecuteReader())while(r.Read())list.Add(r.GetString(0));return list.ToArray();}}
+  {using(var c=Open())using(var cmd=new SqlCommand("SELECT PermissionCode FROM dbo.AppRolePermission WHERE RoleId=@r",c)){cmd.Parameters.Add("@r",SqlDbType.Int).Value=role;var list=new List<string>();using(var r=cmd.ExecuteReader())while(r.Read())list.Add(r.GetString(0));return list.ToArray();}}
   public void SaveRole(int? id,string code,string name,string[] permissions,Guid actor)
   {
    code=(code??"").Trim();name=(name??"").Trim();if(!System.Text.RegularExpressions.Regex.IsMatch(code,@"\A[A-Z][A-Z0-9_]{1,39}\z"))throw new ArgumentException("Mã vai trò chỉ dùng A-Z, số và dấu gạch dưới.");if(name.Length<1||name.Length>100)throw new ArgumentException("Tên vai trò là bắt buộc, tối đa 100 ký tự.");permissions=(permissions??new string[0]).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
    using(var c=Open())using(var tx=c.BeginTransaction(IsolationLevel.Serializable))
    {
+    foreach(string permission in permissions)
+    using(var access=new SqlCommand(@"SELECT COUNT(*) FROM dbo.AppUserRole ur JOIN dbo.AppRole r ON r.RoleId=ur.RoleId AND r.IsEnabled=1
+      JOIN dbo.AppRolePermission rp ON rp.RoleId=r.RoleId WHERE ur.UserId=@actor AND rp.PermissionCode=@p",c,tx))
+    {access.Parameters.Add("@actor",SqlDbType.UniqueIdentifier).Value=actor;access.Parameters.Add("@p",SqlDbType.VarChar,120).Value=permission;if(Convert.ToInt32(access.ExecuteScalar())==0)throw new ArgumentException("Không thể cấp quyền mà bạn không có.");}
     int roleId;
     if(id.HasValue)
     {

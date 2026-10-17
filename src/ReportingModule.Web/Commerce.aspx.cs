@@ -73,7 +73,8 @@ namespace ReportingModule.Web
    number=new TextBox { ID="Number",MaxLength=30 }; AddField(header,"Số phiếu *",number);
    date=new TextBox { ID="DocumentDate",TextMode=TextBoxMode.Date }; AddField(header,"Ngày *",date);
    note=new TextBox { ID="Note",MaxLength=500 }; AddField(header,"Diễn giải",note);
-   partner=new DropDownList { ID="Partner" }; AddField(header,CommerceStore.IsSales(kind)?"Khách hàng *":"Nhà cung cấp *",partner);
+   partner=new DropDownList { ID="Partner",AutoPostBack=screen=="ap-invoice" }; AddField(header,CommerceStore.IsSales(kind)?"Khách hàng *":"Nhà cung cấp *",partner);
+   if(screen=="ap-invoice") partner.SelectedIndexChanged+=(s,args)=>BindPurchaseReceipts();
    if(screen=="ap-invoice") { receipt=new DropDownList { ID="PurchaseReceipt" }; AddField(header,"Phiếu nhập mua đã ghi sổ *",receipt); }
    var hint=new HtmlGenericControl("p"); hint.Attributes["class"]="muted"; hint.InnerText=kind.EndsWith("ORDER")?"Đơn hàng là chứng từ theo dõi; chưa tác động tồn kho, doanh thu hoặc công nợ.":screen=="ap-invoice"?"Phiếu nhập mua cập nhật tồn kho. Hóa đơn mua cập nhật công nợ và liên kết phiếu nhập, không nhập kho lần nữa. Chưa xử lý thuế/chiết khấu hoặc đối chiếu số lượng, giá trị hóa đơn với phiếu nhập.":"Hóa đơn bán ghi nhận doanh thu/công nợ và tạo phiếu xuất liên kết. Tiền hàng chưa gồm thuế/chiết khấu."; editor.Controls.Add(hint);
    detailHtml=new Literal(); editor.Controls.Add(detailHtml);
@@ -118,7 +119,7 @@ namespace ReportingModule.Web
     partner.DataSource=store.Partners(kind); partner.DataValueField="Ma"; partner.DataTextField="Ten"; partner.DataBind(); partner.Items.Insert(0,new ListItem("Chọn đối tác", ""));
     unit.DataSource=units; unit.DataTextField="TenDonVi"; unit.DataValueField="MaDonVi"; unit.DataBind();
     if(!IsPostBack && !string.IsNullOrEmpty(Request.QueryString["unit"]) && unit.Items.FindByValue(Request.QueryString["unit"])!=null) unit.SelectedValue=Request.QueryString["unit"];
-    if(receipt!=null) { receipt.DataSource=store.PurchaseReceipts(unit.SelectedValue); receipt.DataTextField="HienThi"; receipt.DataValueField="ChungTuKhoId"; receipt.DataBind(); receipt.Items.Insert(0,new ListItem("Chọn phiếu nhập mua","")); }
+    if(receipt!=null) BindPurchaseReceipts(FormValue(unit),null,FormValue(receipt));
    });
   }
   private void AddField(Control parent,string label,WebControl control)
@@ -143,6 +144,7 @@ namespace ReportingModule.Web
   protected override void OnLoad(EventArgs e)
   {
    base.OnLoad(e);
+   if(receipt!=null&&IsPostBack) Guard(BindPurchaseReceipts);
    if(!IsPostBack)
    {
     from.Text=units!=null&&units.Rows.Count>0?((DateTime)units.Rows[0]["NgayBatDau"]).ToString("yyyy-MM-dd"):"2026-01-01"; to.Text=DateTime.Today.ToString("yyyy-MM-dd");
@@ -163,6 +165,26 @@ namespace ReportingModule.Web
     for(int i=0;i<n;i++) lines.Add(new[]{Request.Form["item"+i]??"",Request.Form["qty"+i]??"",Request.Form["price"+i]??""});
    });
   }
+  private void BindPurchaseReceipts()
+  {
+   if(receipt==null||unit==null||unit.Items.Count==0)return;
+   string selected=receipt.SelectedValue;
+   string currentReceipt=selected;
+   long parsedReceipt;long? currentReceiptId=long.TryParse(currentReceipt,out parsedReceipt)?(long?)parsedReceipt:null;
+   receipt.DataSource=store.PurchaseReceipts(unit.SelectedValue,partner==null?null:partner.SelectedValue,currentReceiptId);
+   receipt.DataTextField="HienThi";receipt.DataValueField="ChungTuKhoId";receipt.DataBind();
+   receipt.Items.Insert(0,new ListItem("Chọn phiếu nhập mua",""));
+   if(!string.IsNullOrEmpty(selected)&&receipt.Items.FindByValue(selected)!=null)receipt.SelectedValue=selected;
+  }
+  private static string FormValue(ListControl control)
+  { return control==null?null:HttpContext.Current.Request.Form[control.UniqueID]; }
+  private void BindPurchaseReceipts(string unitValue,string partnerValue,string receiptValue)
+  {
+   if(receipt==null||string.IsNullOrWhiteSpace(unitValue)||unit.Items.FindByValue(unitValue)==null)return;
+   long parsed;long? currentReceipt=long.TryParse(receiptValue,out parsed)?(long?)parsed:null;
+   receipt.DataSource=store.PurchaseReceipts(unitValue,partnerValue,currentReceipt);receipt.DataTextField="HienThi";receipt.DataValueField="ChungTuKhoId";receipt.DataBind();receipt.Items.Insert(0,new ListItem("Chọn phiếu nhập mua",""));
+   if(!string.IsNullOrEmpty(receiptValue)&&receipt.Items.FindByValue(receiptValue)!=null)receipt.SelectedValue=receiptValue;
+  }
   private void ApplyCriteria()
   {
    var start=StockStore.Date(from.Text); var end=StockStore.Date(to.Text);
@@ -171,7 +193,7 @@ namespace ReportingModule.Web
    // Validate before replacing the active result criteria.
    if(report) store.Report(unit.SelectedValue,start,end,filter.Text,screen);
    else store.List(unit.SelectedValue,kind,start,end,filter.Text);
-   Criteria=new[]{unit.SelectedValue,from.Text,to.Text,filter.Text.Trim()}; grid.PageIndex=0; ClearEditor();
+   Criteria=new[]{unit.SelectedValue,from.Text,to.Text,filter.Text.Trim()}; grid.PageIndex=0; ClearEditor(); Session["CurrentUnit"]=unit.SelectedValue;
   }
   private void ClearEditor() { SelectedId=null; Version=null; editor.Visible=false; selection.Text=""; }
   private void NewDocument()
@@ -188,7 +210,7 @@ namespace ReportingModule.Web
 
    PaymentRequest=Guid.NewGuid(); paymentNumber.Text=paymentAmount.Text=paymentNote.Text=""; paymentDate.Text=DateTime.Today.ToString("yyyy-MM-dd");
    partner.SelectedValue=Convert.ToString(d.Header[CommerceStore.IsSales(kind)?"MaKH":"MaNCC"]);
-   if(receipt!=null && d.Header["ChungTuNhapMuaId"]!=DBNull.Value) receipt.SelectedValue=Convert.ToString(d.Header["ChungTuNhapMuaId"]);
+   if(receipt!=null) { BindPurchaseReceipts(); if(d.Header["ChungTuNhapMuaId"]!=DBNull.Value&&receipt.Items.FindByValue(Convert.ToString(d.Header["ChungTuNhapMuaId"]))!=null) receipt.SelectedValue=Convert.ToString(d.Header["ChungTuNhapMuaId"]); }
    Version=(byte[])d.Header["PhienBan"]; DraftUnit=Convert.ToString(d.Header["MaDonVi"]); ReadOnlyMode=view;
    number.Text=Convert.ToString(d.Header["SoChungTu"]); date.Text=((DateTime)d.Header["Ngay"]).ToString("yyyy-MM-dd"); note.Text=Convert.ToString(d.Header["DienGiai"]);
    lines=d.Lines.Rows.Cast<DataRow>().Select(r=>new[]{Convert.ToString(r["MaHang"]),CatalogDefinition.Text(r["SoLuong"]),CatalogDefinition.Text(r["DonGia"])}).ToList(); editor.Visible=true;
@@ -224,9 +246,9 @@ namespace ReportingModule.Web
    {
     if((ex.Number>=51201 && ex.Number<=51405)||(ex.Number>=51701&&ex.Number<=51799)) message.Text=HttpUtility.HtmlEncode(ex.Message);
     else if(ex.Number==2601||ex.Number==2627) message.Text="Số phiếu hoặc số tham chiếu thanh toán đã tồn tại.";
-    else { Trace.Warn("Stock","SQL failed",ex); message.Text="Không thể xử lý dữ liệu; hãy làm tươi và thử lại. Kiểm tra kết nối SQL nếu lỗi tiếp diễn."; }
+    else { Log.Error("Stock","SQL failed",ex); message.Text="Không thể xử lý dữ liệu; hãy làm tươi và thử lại. Kiểm tra kết nối SQL nếu lỗi tiếp diễn."; }
    }
-   catch(Exception ex) { Trace.Warn("Stock","Request failed",ex); message.Text="Không thể xử lý yêu cầu. Kiểm tra dữ liệu rồi thử lại."; }
+   catch(Exception ex) { Log.Error("Stock","Request failed",ex); message.Text="Không thể xử lý yêu cầu. Kiểm tra dữ liệu rồi thử lại."; }
   }
   private string Details()
   {
@@ -273,7 +295,7 @@ namespace ReportingModule.Web
     if(report && Criteria!=null && grid.DataSource is DataTable) ViewState["OutputToken"]=ReportOutput.Capture(Context,screen,"Điều kiện: "+string.Join(" | ",Criteria),summary.Text,(DataTable)grid.DataSource,grid,Criteria);
     if(editor.Visible)
     {
-     editorUnit.Text="Đơn vị: "+HttpUtility.HtmlEncode(DraftUnit)+(ReadOnlyMode?" • Chế độ xem":" • Phiếu nháp");
+     editorUnit.Text="Đơn vị cơ sở: "+HttpUtility.HtmlEncode(DraftUnit)+(ReadOnlyMode?" • Chế độ xem":" • Phiếu nháp");
      number.ReadOnly=date.ReadOnly=note.ReadOnly=ReadOnlyMode; partner.Enabled=!ReadOnlyMode;
      if(receipt!=null)receipt.Enabled=!ReadOnlyMode;
      save.Enabled=post.Enabled=add.Enabled=remove.Enabled=!ReadOnlyMode;

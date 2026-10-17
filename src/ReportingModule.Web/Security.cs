@@ -15,7 +15,7 @@ namespace ReportingModule.Web
 {
  public sealed class AppUserInfo
  {
-  public Guid Id; public string Username,DisplayName; public bool Enabled; public DateTime? LockedUntilUtc;
+  public Guid Id; public string Username,DisplayName; public bool Enabled,MustChangePassword; public DateTime? LockedUntilUtc;
   public string[] Roles=new string[0];
  }
 
@@ -29,32 +29,21 @@ namespace ReportingModule.Web
   {
    if(string.IsNullOrEmpty(password)||password.Length<12||password.Length>256) throw new ArgumentException("Mật khẩu phải có từ 12 đến 256 ký tự.");
    if(salt==null||salt.Length!=SaltLength) throw new ArgumentException("Muối mật khẩu không hợp lệ.");
-   return Pbkdf2Sha256(Encoding.UTF8.GetBytes(password),salt,Iterations,HashLength);
+   return Pbkdf2Sha256(password,salt,Iterations,HashLength);
   }
   public static bool Verify(string password,byte[] salt,byte[] expected,int iterations,int version)
   {
    if(password==null||salt==null||expected==null||salt.Length!=SaltLength||expected.Length!=HashLength||iterations<100000||iterations>1000000||version!=Version) return false;
-   byte[] actual=Pbkdf2Sha256(Encoding.UTF8.GetBytes(password),salt,iterations,expected.Length);
+   byte[] actual=Pbkdf2Sha256(password,salt,iterations,expected.Length);
    int mismatch=0; for(int i=0;i<actual.Length;i++) mismatch|=actual[i]^expected[i];
    Array.Clear(actual,0,actual.Length); return mismatch==0;
   }
-  private static byte[] Pbkdf2Sha256(byte[] password,byte[] salt,int iterations,int length)
+  private static byte[] Pbkdf2Sha256(string password,byte[] salt,int iterations,int length)
   {
-   var output=new byte[length];
-   using(var hmac=new HMACSHA256(password))
+   using(var derivation=new Rfc2898DeriveBytes(password,salt,iterations,HashAlgorithmName.SHA256))
    {
-    int blocks=(length+hmac.HashSize/8-1)/(hmac.HashSize/8);
-    for(int block=1,offset=0;block<=blocks;block++)
-    {
-     byte[] input=new byte[salt.Length+4]; Buffer.BlockCopy(salt,0,input,0,salt.Length);
-     input[input.Length-4]=(byte)(block>>24); input[input.Length-3]=(byte)(block>>16); input[input.Length-2]=(byte)(block>>8); input[input.Length-1]=(byte)block;
-     byte[] u=hmac.ComputeHash(input),t=(byte[])u.Clone();
-     for(int i=1;i<iterations;i++) { u=hmac.ComputeHash(u); for(int j=0;j<t.Length;j++) t[j]^=u[j]; }
-     int take=Math.Min(t.Length,length-offset); Buffer.BlockCopy(t,0,output,offset,take); offset+=take;
-     Array.Clear(input,0,input.Length); Array.Clear(u,0,u.Length); Array.Clear(t,0,t.Length);
-    }
+    return derivation.GetBytes(length);
    }
-   return output;
   }
  }
 
@@ -112,22 +101,25 @@ namespace ReportingModule.Web
   private static string SafeAuditName(string value) { value=(value??"").Trim(); return value.Length>64?value.Substring(0,64):value; }
   public static AppUserInfo Get(Guid id)
   {
-   using(var c=new SqlConnection(Connection)) using(var cmd=new SqlCommand("SELECT UserId,Username,DisplayName,IsEnabled,LockedUntilUtc FROM dbo.AppUser WHERE UserId=@id",c))
-   { cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;c.Open();using(var r=cmd.ExecuteReader()) if(r.Read()) { var x=new AppUserInfo{Id=r.GetGuid(0),Username=r.GetString(1),DisplayName=r.GetString(2),Enabled=r.GetBoolean(3),LockedUntilUtc=r.IsDBNull(4)?(DateTime?)null:r.GetDateTime(4)};x.Roles=Roles(id);return x; } }
+   using(var c=new SqlConnection(Connection)) using(var cmd=new SqlCommand("SELECT UserId,Username,DisplayName,IsEnabled,LockedUntilUtc,MustChangePassword FROM dbo.AppUser WHERE UserId=@id",c))
+   { cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;c.Open();using(var r=cmd.ExecuteReader()) if(r.Read()) { var x=new AppUserInfo{Id=r.GetGuid(0),Username=r.GetString(1),DisplayName=r.GetString(2),Enabled=r.GetBoolean(3),LockedUntilUtc=r.IsDBNull(4)?(DateTime?)null:r.GetDateTime(4),MustChangePassword=r.GetBoolean(5)};x.Roles=Roles(id);return x; } }
    return null;
   }
   public static bool ChangePassword(Guid id,string currentPassword,string newPassword)
   {
    byte[] salt=PasswordHash.NewSalt(),hash=PasswordHash.Create(newPassword,salt);
-   using(var c=new SqlConnection(Connection))using(var tx=c.BeginTransaction(IsolationLevel.Serializable))
+   using(var c=new SqlConnection(Connection))
    {
+    c.Open(); using(var tx=c.BeginTransaction(IsolationLevel.Serializable))
+    {
     byte[] oldHash,oldSalt;int iterations,version;string username;
     using(var cmd=new SqlCommand("SELECT Username,PasswordHash,PasswordSalt,HashIterations,HashVersion FROM dbo.AppUser WITH(UPDLOCK,HOLDLOCK) WHERE UserId=@id AND IsEnabled=1",c,tx))
-    {cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;c.Open();using(var r=cmd.ExecuteReader()){if(!r.Read())return false;username=r.GetString(0);oldHash=(byte[])r[1];oldSalt=(byte[])r[2];iterations=r.GetInt32(3);version=r.GetInt16(4);}}
+    {cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;using(var r=cmd.ExecuteReader()){if(!r.Read())return false;username=r.GetString(0);oldHash=(byte[])r[1];oldSalt=(byte[])r[2];iterations=r.GetInt32(3);version=r.GetInt16(4);}}
     if(!PasswordHash.Verify(currentPassword,oldSalt,oldHash,iterations,version)){tx.Rollback();return false;}
     using(var cmd=new SqlCommand("UPDATE dbo.AppUser SET PasswordHash=@h,PasswordSalt=@s,HashIterations=@i,HashVersion=@v,MustChangePassword=0,UpdatedAtUtc=SYSUTCDATETIME(),UpdatedBy=@id WHERE UserId=@id",c,tx))
     {cmd.Parameters.Add("@h",SqlDbType.VarBinary,32).Value=hash;cmd.Parameters.Add("@s",SqlDbType.VarBinary,16).Value=salt;cmd.Parameters.Add("@i",SqlDbType.Int).Value=PasswordHash.Iterations;cmd.Parameters.Add("@v",SqlDbType.SmallInt).Value=PasswordHash.Version;cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;cmd.ExecuteNonQuery();}
     WriteAudit(c,tx,id,username,null,"SYSTEM","AUTHENTICATION","PASSWORD_CHANGE","SUCCESS","Người dùng đổi mật khẩu.");tx.Commit();return true;
+    }
    }
   }
   public static string[] Roles(Guid id)
@@ -215,7 +207,8 @@ namespace ReportingModule.Web
   }
   public static void Demand(string unit)
   {
-   var id=CurrentIdentity.CurrentUserId(); if(!id.HasValue)return; // Service unit tests run outside a web principal; all HTTP entry points require one.
+   var id=CurrentIdentity.CurrentUserId();
+   if(!id.HasValue) { if(HttpContext.Current==null)return; throw new HttpException(401,"Yêu cầu đăng nhập để truy cập đơn vị."); }
    if(!IsAllowed(id.Value,unit)) { IdentityStore.Audit("SYSTEM","UNIT","ACCESS","DENIED","Truy cập đơn vị không được gán.",unit);throw new HttpException(403,"Bạn không được cấp quyền cho đơn vị đang chọn."); }
   }
   public static ListItem[] Items(Guid user)
@@ -227,6 +220,13 @@ namespace ReportingModule.Web
   {
    string sql=PermissionService.IsAllowed(user,"SYSTEM.UNIT.ADMIN")?"SELECT MaDonVi,TenDonVi,NgayBatDau FROM dbo.DonVi ORDER BY MaDonVi":"SELECT d.MaDonVi,d.TenDonVi,d.NgayBatDau FROM dbo.DonVi d JOIN dbo.AppUserUnit a ON a.MaDonVi=d.MaDonVi WHERE a.UserId=@id ORDER BY d.MaDonVi";
    using(var c=new SqlConnection(ConfigurationManager.ConnectionStrings["ReportingModule"].ConnectionString))using(var cmd=new SqlCommand(sql,c)){if(sql.Contains("@id"))cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=user;c.Open();var t=new DataTable();using(var da=new SqlDataAdapter(cmd))da.Fill(t);return t;}
+  }
+  public static DataTable CurrentTable()
+  {
+   var id=CurrentIdentity.CurrentUserId();
+   if(id.HasValue)return Table(id.Value);
+   if(HttpContext.Current==null)return null;
+   using(var c=new SqlConnection(ConfigurationManager.ConnectionStrings["ReportingModule"].ConnectionString))using(var da=new SqlDataAdapter("SELECT MaDonVi,TenDonVi,NgayBatDau FROM dbo.DonVi WHERE 1=0",c)){var t=new DataTable();da.Fill(t);return t;}
   }
  }
 
@@ -240,6 +240,7 @@ namespace ReportingModule.Web
    Guid? id=CurrentIdentity.CurrentUserId();
    if(!id.HasValue) { string url=Request.RawUrl??"Default.aspx"; if(!IsLocalUrl(url))url="Default.aspx";Response.Redirect("Login.aspx?returnUrl="+HttpUtility.UrlEncode(url),true);return; }
    UserId=id.Value; var who=IdentityStore.Get(UserId); if(who==null||!who.Enabled) { FormsAuthentication.SignOut();Session.Clear();Session.Abandon();Response.Redirect("Login.aspx",true);return; }
+   if(who.MustChangePassword&&!string.Equals(Request.AppRelativeCurrentExecutionFilePath,"~/ChangePassword.aspx",StringComparison.OrdinalIgnoreCase)) { Response.Redirect("ChangePassword.aspx?required=1",true);return; }
    object last=Session["LastActivityUtc"]; if(last is DateTime&&DateTime.UtcNow-((DateTime)last)>TimeSpan.FromMinutes(20)) {FormsAuthentication.SignOut();Session.Clear();Session.Abandon();Response.Redirect("Login.aspx?expired=1",true);return;}
    Session["LastActivityUtc"]=DateTime.UtcNow;if(Session["CsrfToken"]==null)Session["CsrfToken"]=Guid.NewGuid().ToString("N");ViewStateUserKey=Session.SessionID+":"+UserId.ToString("N");
    string screen=Request.QueryString["screen"];
@@ -268,8 +269,10 @@ namespace ReportingModule.Web
    if(!string.IsNullOrEmpty(unit))UnitAccess.Demand(unit);
    if(action=="Post")RequirePermission(PermissionMap.Action(screen,editing?"SaveDraft":"New",false,editing));
    RequirePermission(permission);
-   try { work();IdentityStore.Audit(ModuleFor(screen),PermissionMap.Function(screen),ActionCode(action),"SUCCESS","Thao tác nghiệp vụ đã hoàn tất.",unit,entity); }
-   catch { try{IdentityStore.Audit(ModuleFor(screen),PermissionMap.Function(screen),ActionCode(action),"FAILURE","Thao tác nghiệp vụ không hoàn tất.",unit,entity);}catch(Exception auditError){Trace.Warn("Audit","Failed to record a business operation",auditError);} throw; }
+   try { work(); }
+   catch(Exception) { try{IdentityStore.Audit(ModuleFor(screen),PermissionMap.Function(screen),ActionCode(action),"FAILURE","Thao tác nghiệp vụ không hoàn tất.",unit,entity);}catch(Exception auditError){Log.Error("Audit","Failed to record a business operation failure",auditError);} throw; }
+   try { IdentityStore.Audit(ModuleFor(screen),PermissionMap.Function(screen),ActionCode(action),"SUCCESS","Thao tác nghiệp vụ đã hoàn tất.",unit,entity); }
+   catch(Exception auditError) { Log.Error("Audit","Business operation succeeded but its audit record failed",auditError); }
   }
   protected static string ActionCode(string id)
   { switch(id){case "New":case "Save":case "SaveDraft":return "CREATE_OR_EDIT";case "Edit":return "EDIT";case "Delete":return "DELETE_DRAFT";case "Post":return "POST";case "Import":case "CommitImport":return "IMPORT";case "Export":return "EXPORT";case "Template":return "TEMPLATE";case "Output":case "ExcelOutput":case "PdfOutput":return "OUTPUT";case "RecordPayment":return "PAYMENT";default:return "VIEW";} }

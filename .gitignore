@@ -4,3 +4,5 @@
 artifacts/
 *.user
 
+# Runtime application diagnostics contain machine-specific exceptions.
+src/ReportingModule.Web/App_Data/logs/

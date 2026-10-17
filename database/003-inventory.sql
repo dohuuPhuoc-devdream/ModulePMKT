@@ -8,7 +8,7 @@ DECLARE @Lock int;
 EXEC @Lock=sys.sp_getapplock @Resource=N'ReportingModule.Schema',@LockMode='Exclusive',@LockOwner='Transaction',@LockTimeout=10000;
 IF @Lock<0 THROW 51200,'Cannot acquire migration lock.',1;
 IF NOT EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version=1) THROW 51200,'Schema 1 required.',1;
-IF EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version>7) THROW 51200,'Database is newer than this migration.',1;
+IF EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version>8) THROW 51200,'Database is newer than this migration.',1;
 IF TYPE_ID(N'dbo.StockLines') IS NULL
  EXEC(N'CREATE TYPE dbo.StockLines AS TABLE(Dong int NOT NULL PRIMARY KEY, MaHang varchar(20) NOT NULL, SoLuong decimal(18,3) NOT NULL, DonGia decimal(19,4) NOT NULL)');
 GO

@@ -63,7 +63,9 @@ namespace ReportingModule.Web
       <cellXfs count='4'><xf numFmtId='0' fontId='0' fillId='0' borderId='0' xfId='0'/><xf numFmtId='14' fontId='0' fillId='0' borderId='0' xfId='0' applyNumberFormat='1'/><xf numFmtId='164' fontId='0' fillId='0' borderId='0' xfId='0' applyNumberFormat='1'/><xf numFmtId='165' fontId='0' fillId='0' borderId='0' xfId='0' applyNumberFormat='1'/></cellXfs>
       <cellStyles count='1'><cellStyle name='Normal' xfId='0' builtinId='0'/></cellStyles></styleSheet>"));
      var data=new XElement(S+"sheetData");
-     var metadata=new[]{snapshot.Title,snapshot.Criteria,"Thời điểm dữ liệu UTC: "+snapshot.Created.ToString("yyyy-MM-dd HH:mm:ss"),snapshot.Summary};
+   bool hasLargeNumeric=table.Columns.Cast<DataColumn>().Any(c=>c.DataType==typeof(decimal)||c.DataType==typeof(long))&&table.Rows.Cast<DataRow>().Any(r=>table.Columns.Cast<DataColumn>().Any(c=>(c.DataType==typeof(decimal)||c.DataType==typeof(long))&&r[c]!=DBNull.Value&&CatalogDefinition.Text(r[c]).Replace("-","").Replace(".","").TrimStart('0').Length>15));
+   var summary=snapshot.Summary+(hasLargeNumeric?" | Giá trị vượt giới hạn 15 chữ số có nghĩa của Excel được giữ nguyên dưới dạng văn bản.":"");
+   var metadata=new[]{snapshot.Title,snapshot.Criteria,"Thời điểm dữ liệu UTC: "+snapshot.Created.ToString("yyyy-MM-dd HH:mm:ss"),summary};
      for(int i=0;i<metadata.Length;i++) data.Add(new XElement(S+"row",new XAttribute("r",i+1),Cell("A"+(i+1),metadata[i])));
      data.Add(new XElement(S+"row",new XAttribute("r",5),snapshot.Columns.Select((c,i)=>Cell(Column(i)+"5",c.Title))));
      for(int i=0;i<table.Rows.Count;i++) {
@@ -105,11 +107,15 @@ namespace ReportingModule.Web
      put(r,c+1,value,style);
     }}
    int totalRow=firstLine+s.Data.Rows.Count+1;
-   put(totalRow,Math.Max(0,columnCount-2),"Tổng cộng",12);
+   put(totalRow,s.Data.Columns.Contains("PhatSinhNo")?0:Math.Max(0,columnCount-2),s.DocumentTotalLabel??"Tổng cộng",12);
    decimal total=0m;
    if(s.Data.Columns.Contains("ThanhTien")) { foreach(DataRow dr in s.Data.Rows) if(dr["ThanhTien"]!=DBNull.Value) total+=Convert.ToDecimal(dr["ThanhTien"]); }
-   else if(s.Data.Columns.Contains("PhatSinhNo")) { foreach(DataRow dr in s.Data.Rows) if(dr["PhatSinhNo"]!=DBNull.Value) total+=Convert.ToDecimal(dr["PhatSinhNo"]); }
-   put(totalRow,columnCount-1,total,13);
+   else if(s.Data.Columns.Contains("PhatSinhNo")) {
+    decimal debit=0m,credit=0m;foreach(DataRow dr in s.Data.Rows){if(dr["PhatSinhNo"]!=DBNull.Value)debit+=Convert.ToDecimal(dr["PhatSinhNo"]);if(dr["PhatSinhCo"]!=DBNull.Value)credit+=Convert.ToDecimal(dr["PhatSinhCo"]);}
+    int debitColumn=Array.FindIndex(s.Columns,c=>c.Field=="PhatSinhNo"),creditColumn=Array.FindIndex(s.Columns,c=>c.Field=="PhatSinhCo");
+    if(debitColumn>=0)put(totalRow,debitColumn+1,debit,13);if(creditColumn>=0)put(totalRow,creditColumn+1,credit,13);
+   } else put(totalRow,columnCount-1,total,13);
+   if(s.Data.Columns.Contains("ThanhTien"))put(totalRow,columnCount-1,total,13);
    int signRow=totalRow+3;string[] signatures=ReportOutput.SignatureLabels(s.Screen);
    for(int i=0;i<signatures.Length;i++){int c=i*columnCount/signatures.Length;put(signRow,c,signatures[i],14);put(signRow+1,c,"(Ký, họ tên)",7);}
    var merges=new List<XElement>{new XElement(S+"mergeCell",new XAttribute("ref","A1:"+last+"1")),new XElement(S+"mergeCell",new XAttribute("ref","A2:"+last+"2")),new XElement(S+"mergeCell",new XAttribute("ref","A3:"+last+"3")),new XElement(S+"mergeCell",new XAttribute("ref","A4:B4")),new XElement(S+"mergeCell",new XAttribute("ref","C4:"+last+"4"))};

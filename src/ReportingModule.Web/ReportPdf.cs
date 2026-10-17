@@ -100,7 +100,7 @@ namespace ReportingModule.Web
       float x=margin;g.DrawRectangle(Pens.LightGray,x,y,64,height);g.DrawString((++rowNumber).ToString(CultureInfo.InvariantCulture),regular,Brushes.Black,new RectangleF(x+6,y+8,52,height-12));x+=64;
       for(int i=0;i<cells.Length;i++){g.DrawRectangle(Pens.LightGray,x,y,widths[i],height);using(var f=new StringFormat()){if(s.Columns[i].Format.Contains(":N"))f.Alignment=StringAlignment.Far;g.DrawString(cells[i],regular,Brushes.Black,new RectangleF(x+8,y+8,widths[i]-16,height-12),f);}x+=widths[i];}y+=height;
     }
-    if(!string.IsNullOrEmpty(s.DocumentTotal)){y+=20;g.DrawString("Tổng cộng",bold,Brushes.Black,w-margin-390,y);g.DrawString(s.DocumentTotal,bold,Brushes.Black,w-margin-180,y);y+=50;}
+    if(!string.IsNullOrEmpty(s.DocumentTotal)){y+=20;g.DrawString(s.DocumentTotalLabel??"Tổng cộng",bold,Brushes.Black,w-margin-390,y);g.DrawString(s.DocumentTotal,bold,Brushes.Black,w-margin-180,y);y+=50;}
     if(y+230>bottom){finish();g.Clear(Color.White);y=margin;g.DrawString(s.Title+" — tiếp theo",bold,Brushes.Black,margin,y);y+=70;}
     string[] labels=ReportOutput.SignatureLabels(s.Screen);float block=(w-2*margin)/(float)labels.Length;
     for(int i=0;i<labels.Length;i++){float x=margin+i*block;var size=g.MeasureString(labels[i],bold);g.DrawString(labels[i],bold,Brushes.Black,x+(block-size.Width)/2,y);var hint=g.MeasureString("(Ký, họ tên)",regular);g.DrawString("(Ký, họ tên)",regular,Brushes.Black,x+(block-hint.Width)/2,y+30);}

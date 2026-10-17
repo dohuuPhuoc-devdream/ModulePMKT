@@ -32,6 +32,8 @@ class Phase5Checks
    c.Delete(draft,Version(draft,"SALES_INVOICE"),u,"SALES_INVOICE");
    long receipt=stock.Save(null,null,u,"N","PR",day.AddDays(2),"receipt",Lines(50),true,"NCCDEMO001",true);
    long purchase=c.Save(null,null,u,"PURCHASE_INVOICE","PI",day.AddDays(2),"invoice",Lines(50),true,"NCCDEMO001",receipt); long sale=Save("SALES_INVOICE","SI",20);
+   Reject(()=>c.Save(null,null,u,"PURCHASE_INVOICE","PI-DUP",day.AddDays(2),"duplicate receipt",Lines(1),true,"NCCDEMO001",receipt),"a posted receipt cannot be invoiced twice");
+   Check(c.PurchaseReceipts(u,"NCCDEMO001").Rows.Count==0&&c.PurchaseReceipts(u,"NCCDEMO002").Rows.Count==0,"receipt selector excludes invoiced receipts and filters by supplier");
    Check(Closing()==130,"purchase receipt +50 and sales invoice -20 update inventory exactly once");
    Check(Convert.ToInt32(SQL("SELECT COUNT(*) FROM dbo.ChungTuKho WHERE MaDonVi=@u AND ChungTuThuongMaiId IS NOT NULL"))==1,"purchase invoice does not create another stock movement");
    Reject(()=>stock.Save(null,null,u,"N","NO-SUPPLIER",day.AddDays(2),"",Lines(1),true,null,true),"purchase receipt requires a supplier");
@@ -59,8 +61,12 @@ class Phase5Checks
    Check(passed==1&&rejected==1&&Closing()==30,"concurrent invoices cannot oversell");
    Check(Convert.ToInt32(SQL("SELECT COUNT(*) FROM dbo.ChungTuKho k JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=k.ChungTuThuongMaiId WHERE k.MaDonVi=@u AND (h.TrangThai<>'POSTED' OR k.TrangThai<>'POSTED')"))==0,"no partially posted linked facts");
    Check((decimal)stock.Report("DVDEMO",day,day.AddYears(1),"HANG001","T").Rows[0]["TonCuoi"]==130,"existing HANG001 acceptance preserved");
+   string u2=u+"B";catalogs.Create(CatalogDefinition.Get("units"),new[]{u2,"Phase 5 second unit","2026-01-01"});
+   stock.Save(null,null,u,"N","OTHER-SUPPLIER",day.AddDays(3),"",Lines(1),true,"NCCDEMO002",true);
+   stock.Save(null,null,u2,"N","OTHER-UNIT",day.AddDays(3),"",Lines(1),true,"NCCDEMO001",true);
+   Check(c.PurchaseReceipts(u,"NCCDEMO002").Rows.Count==1&&c.PurchaseReceipts(u2,"NCCDEMO001").Rows.Count==1,"purchase receipt choices honor supplier and selected unit");
   } finally {
-   SQL("UPDATE dbo.ChungTuThuongMai SET ChungTuNhapMuaId=NULL WHERE MaDonVi=@u; DELETE d FROM dbo.CTChungTuKho d JOIN dbo.ChungTuKho h ON h.ChungTuKhoId=d.ChungTuKhoId WHERE h.MaDonVi=@u; DELETE dbo.ChungTuKho WHERE MaDonVi=@u; DELETE d FROM dbo.CTChungTuThuongMai d JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=d.ChungTuId WHERE h.MaDonVi=@u; DELETE dbo.ChungTuThuongMai WHERE MaDonVi=@u; DELETE dbo.TonDauKy WHERE MaDonVi=@u; DELETE dbo.DonVi WHERE MaDonVi=@u; DELETE dbo.HangHoa WHERE MaHang=@i;");
+   SQL("UPDATE dbo.ChungTuThuongMai SET ChungTuNhapMuaId=NULL WHERE MaDonVi=@u; DELETE d FROM dbo.CTChungTuKho d JOIN dbo.ChungTuKho h ON h.ChungTuKhoId=d.ChungTuKhoId WHERE h.MaDonVi IN(@u,@u+'B'); DELETE dbo.ChungTuKho WHERE MaDonVi IN(@u,@u+'B'); DELETE d FROM dbo.CTChungTuThuongMai d JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=d.ChungTuId WHERE h.MaDonVi IN(@u,@u+'B'); DELETE dbo.ChungTuThuongMai WHERE MaDonVi IN(@u,@u+'B'); DELETE dbo.TonDauKy WHERE MaDonVi IN(@u,@u+'B'); DELETE dbo.DonVi WHERE MaDonVi IN(@u,@u+'B'); DELETE dbo.HangHoa WHERE MaHang=@i;");
   }
   Console.WriteLine("PHASE 5 SERVICE CHECKS PASSED; isolated fixtures removed.");
  }

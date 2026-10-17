@@ -23,7 +23,7 @@ namespace ReportingModule.Web
   }
   protected void Application_Error(object sender,EventArgs e)
   {
-   var ex=Server.GetLastError();if(ex!=null)Context.Trace.Warn("Application","Unhandled request error",ex);
+   var ex=Server.GetLastError();if(ex!=null)Log.Error("Application","Unhandled request error",ex);
   }
  }
 }

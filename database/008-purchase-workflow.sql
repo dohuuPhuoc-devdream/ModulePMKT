@@ -8,7 +8,7 @@ DECLARE @Lock int;
 EXEC @Lock=sys.sp_getapplock @Resource=N'ReportingModule.Schema',@LockMode='Exclusive',@LockOwner='Transaction',@LockTimeout=10000;
 IF @Lock<0 THROW 51700,'Cannot acquire migration lock.',1;
 IF NOT EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version=6) THROW 51700,'Security schema version 6 required.',1;
-IF EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version>7) THROW 51700,'Database is newer than this migration.',1;
+IF EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version>8) THROW 51700,'Database is newer than this migration.',1;
 IF COL_LENGTH('dbo.ChungTuKho','MaNCC') IS NULL
  EXEC(N'ALTER TABLE dbo.ChungTuKho ADD MaNCC varchar(20) NULL CONSTRAINT FK_CTK_NCC REFERENCES dbo.NhaCungCap(MaNCC)');
 IF COL_LENGTH('dbo.ChungTuThuongMai','ChungTuNhapMuaId') IS NULL

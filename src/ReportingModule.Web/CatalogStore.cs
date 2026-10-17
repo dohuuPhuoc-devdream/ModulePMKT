@@ -34,24 +34,24 @@ namespace ReportingModule.Web
   {
    if((filter??"").Length>100) throw new ArgumentException("Từ khóa tối đa 100 ký tự.");
    Guid? user=CurrentIdentity.CurrentUserId();
-   string scope=d.Id=="units"&&user.HasValue&&!PermissionService.IsAllowed(user.Value,"SYSTEM.UNIT.ADMIN")?" AND MaDonVi IN(SELECT MaDonVi FROM dbo.AppUserUnit WHERE UserId=@user)":"";
+   string scope=d.Id!="units"?"":user.HasValue&&!PermissionService.IsAllowed(user.Value,"SYSTEM.UNIT.ADMIN")?" AND MaDonVi IN(SELECT MaDonVi FROM dbo.AppUserUnit WHERE UserId=@user)":System.Web.HttpContext.Current!=null?" AND 1=0":"";
    using(var c=Open())
    using(var cmd=new SqlCommand("SELECT "+Columns(d)+" FROM dbo.["+d.Table+"] WHERE (["+d.Fields[0].Name+"] LIKE @q ESCAPE '~' OR ["+d.Fields[1].Name+"] LIKE @q ESCAPE '~')"+scope+" ORDER BY ["+d.Fields[0].Name+"]",c))
    {
     string q=(filter??"").Trim().Replace("~","~~").Replace("%","~%").Replace("_","~_").Replace("[","~[");
     cmd.Parameters.Add("@q",SqlDbType.NVarChar,210).Value="%"+q+"%";
-    if(scope!="")cmd.Parameters.Add("@user",SqlDbType.UniqueIdentifier).Value=user.Value;
+    if(scope.Contains("@user"))cmd.Parameters.Add("@user",SqlDbType.UniqueIdentifier).Value=user.Value;
     var dt=new DataTable(); using(var adapter=new SqlDataAdapter(cmd)) adapter.Fill(dt); return dt;
    }
   }
   public object[] Find(CatalogDefinition d,string key)
   {
    Guid? user=CurrentIdentity.CurrentUserId();
-   string scope=d.Id=="units"&&user.HasValue&&!PermissionService.IsAllowed(user.Value,"SYSTEM.UNIT.ADMIN")?" AND MaDonVi IN(SELECT MaDonVi FROM dbo.AppUserUnit WHERE UserId=@user)":"";
+   string scope=d.Id!="units"?"":user.HasValue&&!PermissionService.IsAllowed(user.Value,"SYSTEM.UNIT.ADMIN")?" AND MaDonVi IN(SELECT MaDonVi FROM dbo.AppUserUnit WHERE UserId=@user)":System.Web.HttpContext.Current!=null?" AND 1=0":"";
    using(var c=Open())
    using(var cmd=new SqlCommand("SELECT "+Columns(d)+" FROM dbo.["+d.Table+"] WHERE ["+d.Fields[0].Name+"]=@id"+scope,c))
    {
-    if(scope!="")cmd.Parameters.Add("@user",SqlDbType.UniqueIdentifier).Value=user.Value;
+    if(scope.Contains("@user"))cmd.Parameters.Add("@user",SqlDbType.UniqueIdentifier).Value=user.Value;
     Param(cmd,"@id",d.Fields[0],key);
     using(var r=cmd.ExecuteReader()) { if(!r.Read()) throw new ArgumentException("Bản ghi không còn tồn tại. Hãy làm tươi."); var values=new object[d.Fields.Length]; r.GetValues(values); return values; }
    }
@@ -145,6 +145,6 @@ namespace ReportingModule.Web
    return prepared.Count;
   }
   private static void DemandUnitAdmin(CatalogDefinition d)
-  {var id=CurrentIdentity.CurrentUserId();if(d.Id=="units"&&id.HasValue)PermissionService.Demand(id.Value,"SYSTEM.UNIT.ADMIN");}
+  {var id=CurrentIdentity.CurrentUserId();if(d.Id=="units"){if(!id.HasValue&&System.Web.HttpContext.Current!=null)throw new System.Web.HttpException(401,"Yêu cầu đăng nhập để quản lý đơn vị.");if(id.HasValue)PermissionService.Demand(id.Value,"SYSTEM.UNIT.ADMIN");}}
  }
 }

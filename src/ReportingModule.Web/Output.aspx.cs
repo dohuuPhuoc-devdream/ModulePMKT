@@ -11,9 +11,9 @@ namespace ReportingModule.Web
   {
    base.OnLoad(e); Response.Cache.SetCacheability(HttpCacheability.NoCache); Response.Cache.SetNoStore();
    try { LoadOutput(); }
-   catch(HttpException ex) { if(ex.GetHttpCode()==403||ex.GetHttpCode()==404||ex.GetHttpCode()==410)try{IdentityStore.Audit("SECURITY","OUTPUT","ACCESS","DENIED","Bản kết xuất bị từ chối hoặc không còn hợp lệ.");}catch(Exception auditError){Trace.Warn("Audit","Output denial audit failed",auditError);}ShowError(ex.GetHttpCode(),ex.Message); }
+   catch(HttpException ex) { if(ex.GetHttpCode()==403||ex.GetHttpCode()==404||ex.GetHttpCode()==410)try{IdentityStore.Audit("SECURITY","OUTPUT","ACCESS","DENIED","Bản kết xuất bị từ chối hoặc không còn hợp lệ.");}catch(Exception auditError){Log.Error("Audit","Output denial audit failed",auditError);}ShowError(ex.GetHttpCode(),ex.Message); }
    catch(ArgumentException ex) { ShowError(400,ex.Message); }
-   catch(Exception ex) { Trace.Warn("Output","Output generation failed",ex); ShowError(503,"Chưa thể tạo bản kết xuất. Hãy trở lại báo cáo, làm tươi và thử lại."); }
+   catch(Exception ex) { Log.Error("Output","Output generation failed",ex); ShowError(503,"Chưa thể tạo bản kết xuất. Hãy trở lại báo cáo, làm tươi và thử lại."); }
   }
   private void LoadOutput()
   {
@@ -26,15 +26,22 @@ namespace ReportingModule.Web
    RequirePermission(ReportOutput.PermissionFor(s.Screen,format));
    Title=s.Title+" | Kết xuất";
    if(format=="print") {
+    AuditOutput(s.Screen,format);
     Report.Text=ReportOutput.Html(s); Excel.NavigateUrl="Output.aspx?token="+id+"&format=xlsx"; Pdf.NavigateUrl="Output.aspx?token="+id+"&format=pdf";
     Excel.Visible=PermissionService.IsAllowed(UserId,ReportOutput.PermissionFor(s.Screen,"xlsx"));
     Pdf.Visible=PermissionService.IsAllowed(UserId,ReportOutput.PermissionFor(s.Screen,"pdf"));
     Back.NavigateUrl=s.SourceUrl??(Navigation.PageFor(s.Screen)+"?screen="+HttpUtility.UrlEncode(s.Screen)); return;
    }
    byte[] bytes=format=="xlsx"?ReportExcel.Export(s):ReportPdf.Export(s);
+   AuditOutput(s.Screen,format);
    Response.Clear(); Response.ContentType=format=="xlsx"?"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":"application/pdf";
    Response.AddHeader("Content-Disposition","attachment; filename="+s.Screen+"."+format); Response.AddHeader("X-Content-Type-Options","nosniff");
    Response.BinaryWrite(bytes); downloading=true; Context.ApplicationInstance.CompleteRequest();
+  }
+  private void AuditOutput(string screen,string format)
+  {
+   try { IdentityStore.Audit(PermissionMap.Module(screen),PermissionMap.Function(screen),format=="xlsx"?"EXPORT":"PRINT","SUCCESS",format=="xlsx"?"Đã tải tệp Excel.":"Đã tạo bản in/PDF.",Session["CurrentUnit"] as string); }
+   catch(Exception error) { Log.Error("Output","Output was generated but audit recording failed",error); }
   }
   private void ShowError(int status,string text)
   {

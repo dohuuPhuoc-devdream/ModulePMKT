@@ -25,7 +25,7 @@ namespace ReportingModule.Web
   protected void SignIn_Click(object sender,EventArgs e)
   {
    Message.Text="";AuthenticationResult result;
-   try{result=IdentityStore.Authenticate(Username.Text,Password.Text);}catch(Exception ex){Trace.Warn("Authentication","Sign-in failed",ex);result=new AuthenticationResult{Error="Chưa thể đăng nhập. Hãy thử lại sau."};}
+   try{result=IdentityStore.Authenticate(Username.Text,Password.Text);}catch(Exception ex){Log.Error("Authentication","Sign-in failed",ex);result=new AuthenticationResult{Error="Chưa thể đăng nhập. Hãy thử lại sau."};}
    Password.Text="";
    if(result.User==null){Message.Text=HttpUtility.HtmlEncode(result.Error??"Tên đăng nhập hoặc mật khẩu không đúng, hoặc tài khoản đang bị khóa.");return;}
    Session.Clear();Session.Abandon();

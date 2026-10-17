@@ -7,6 +7,8 @@ namespace ReportingModule.Web
  public partial class ChangePasswordPage:AppPage
  {
   protected Label Message;protected TextBox Current,NewPassword,Confirm;
+  protected override void OnLoad(EventArgs e)
+  { base.OnLoad(e);if(!IsPostBack&&Request.QueryString["required"]=="1")Message.Text="Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống."; }
   protected void Save_Click(object sender,EventArgs e)
   {
    try
@@ -16,7 +18,7 @@ namespace ReportingModule.Web
     Current.Text=NewPassword.Text=Confirm.Text="";Message.Text="Đã đổi mật khẩu.";
    }
    catch(ArgumentException ex){Message.Text=HttpUtility.HtmlEncode(ex.Message);}
-   catch(Exception ex){Trace.Warn("Authentication","Password change failed",ex);Message.Text="Chưa thể đổi mật khẩu. Hãy thử lại.";}
+   catch(Exception ex){Log.Error("Authentication","Password change failed",ex);Message.Text="Chưa thể đổi mật khẩu. Hãy thử lại.";}
   }
  }
 }

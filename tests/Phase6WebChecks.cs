@@ -71,6 +71,9 @@ class Phase6WebChecks
  static DebtResult Post(DebtResult page,string button,Dictionary<string,string> controls=null,Dictionary<string,string> raw=null)
  {
   var fields=Hidden(page.Body); fields["ctl00$WorkspaceContent$"+button]="1";
+  // Real browsers submit the selected unit on every postback; receipt choices
+  // are rebuilt against that unit before ASP.NET validates posted dropdowns.
+  fields["ctl00$WorkspaceContent$Unit"]=unit;
   if(controls!=null) foreach(var kv in controls) fields["ctl00$WorkspaceContent$"+kv.Key]=kv.Value;
   if(raw!=null) foreach(var kv in raw) fields[kv.Key]=kv.Value;
   return Request(string.Join("&",fields.Select(kv=>HttpUtility.UrlEncode(kv.Key)+"="+HttpUtility.UrlEncode(kv.Value))));

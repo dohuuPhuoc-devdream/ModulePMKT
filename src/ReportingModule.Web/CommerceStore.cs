@@ -26,7 +26,7 @@ namespace ReportingModule.Web
   {
    using(var c=Open()) using(var cmd=new SqlCommand(sql,c)) { cmd.Parameters.AddRange(args); var dt=new DataTable(); using(var da=new SqlDataAdapter(cmd)) da.Fill(dt); return dt; }
   }
-  public DataTable Units() { var id=CurrentIdentity.CurrentUserId();return id.HasValue?UnitAccess.Table(id.Value):Query("SELECT MaDonVi,TenDonVi,NgayBatDau FROM dbo.DonVi ORDER BY MaDonVi"); }
+  public DataTable Units() { var current=UnitAccess.CurrentTable();return current??Query("SELECT MaDonVi,TenDonVi,NgayBatDau FROM dbo.DonVi ORDER BY MaDonVi"); }
   public DataTable Items() { return Query("SELECT MaHang,TenHang,DonViTinh FROM dbo.HangHoa ORDER BY MaHang"); }
   public long Save(long? id,byte[] version,string unit,string kind,string number,DateTime date,string note,IList<StockLine> lines,bool post,string partner,long? purchaseReceiptId=null)
   {
@@ -105,13 +105,16 @@ namespace ReportingModule.Web
    ValidateKind(kind);
    return Query(IsSales(kind)?"SELECT MaKH AS Ma,TenKH AS Ten FROM dbo.KhachHang ORDER BY MaKH":"SELECT MaNCC AS Ma,TenNCC AS Ten FROM dbo.NhaCungCap ORDER BY MaNCC");
   }
-  public DataTable PurchaseReceipts(string unit)
+  public DataTable PurchaseReceipts(string unit,string partner=null,long? currentReceiptId=null)
   {
    UnitAccess.Demand(unit);
-   return Query(@"SELECT ChungTuKhoId,SoChungTu,Ngay,MaNCC,
-    SoChungTu+' | '+MaNCC+' | '+CONVERT(varchar(10),Ngay,103) AS HienThi FROM dbo.ChungTuKho
-    WHERE MaDonVi=@u AND Loai='N' AND TrangThai='POSTED' AND MaNCC IS NOT NULL ORDER BY Ngay DESC,ChungTuKhoId DESC",
-    P("@u",SqlDbType.VarChar,unit,20));
+   return Query(@"SELECT k.ChungTuKhoId,k.SoChungTu,k.Ngay,k.MaNCC,
+    k.SoChungTu+' | '+k.MaNCC+' | '+CONVERT(varchar(10),k.Ngay,103) AS HienThi FROM dbo.ChungTuKho k
+    WHERE k.MaDonVi=@u AND k.Loai='N' AND k.TrangThai='POSTED' AND k.MaNCC IS NOT NULL
+     AND (@partner IS NULL OR k.MaNCC=@partner)
+     AND (k.ChungTuKhoId=@currentReceipt OR NOT EXISTS(SELECT 1 FROM dbo.ChungTuThuongMai h WHERE h.Loai='PURCHASE_INVOICE' AND h.ChungTuNhapMuaId=k.ChungTuKhoId))
+    ORDER BY k.Ngay DESC,k.ChungTuKhoId DESC",
+    P("@u",SqlDbType.VarChar,unit,20),P("@partner",SqlDbType.VarChar,string.IsNullOrWhiteSpace(partner)?null:partner,20),P("@currentReceipt",SqlDbType.BigInt,currentReceiptId));
   }
   public DataTable Report(string unit,DateTime from,DateTime to,string partner,string mode)
   {

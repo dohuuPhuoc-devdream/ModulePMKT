@@ -139,7 +139,7 @@ namespace ReportingModule.Web
          value=DateTime.FromOADate(serial<60?serial+1:serial).ToString("yyyy-MM-dd",CultureInfo.InvariantCulture);
         }
         else if(d.Fields[column-1].Kind=="decimal" && decimal.TryParse(value,NumberStyles.Float,CultureInfo.InvariantCulture,out numeric))
-         value=numeric.ToString(CultureInfo.InvariantCulture);
+         value=NumberParser.FormatInput(numeric);
        }
        values[column-1]=value;
       }

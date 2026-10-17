@@ -71,6 +71,9 @@ class Phase5WebChecks
  static CommerceResult Post(CommerceResult page,string button,Dictionary<string,string> controls=null,Dictionary<string,string> raw=null)
  {
   var fields=Hidden(page.Body); fields["ctl00$WorkspaceContent$"+button]="1";
+  // Browsers submit the selected unit on every postback. Keep the harness
+  // faithful here because AP invoice receipt choices are rebound per unit.
+  fields["ctl00$WorkspaceContent$Unit"]=unit;
   if(controls!=null) foreach(var kv in controls) fields["ctl00$WorkspaceContent$"+kv.Key]=kv.Value;
   if(raw!=null) foreach(var kv in raw) fields[kv.Key]=kv.Value;
   return Request(string.Join("&",fields.Select(kv=>HttpUtility.UrlEncode(kv.Key)+"="+HttpUtility.UrlEncode(kv.Value))));

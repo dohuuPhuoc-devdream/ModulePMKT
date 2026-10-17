@@ -44,7 +44,7 @@ namespace ReportingModule.Web
    string module; var node=Navigation.Find(screen,out module); Title=node.Title+" | Kế toán";
    var breadcrumb=new HtmlGenericControl("p"); breadcrumb.Attributes["class"]="breadcrumb"; breadcrumb.InnerText=module; Root.Controls.Add(breadcrumb);
    var title=new HtmlGenericControl("h1"); title.InnerText=node.Title; Root.Controls.Add(title);
-   Root.Controls.Add(new Literal { Text="<p class=\"muted\">Sổ cái và bảng cân đối tổng hợp từ phiếu kế toán đã ghi sổ. Hóa đơn, kho và thanh toán chưa tự tạo bút toán; chưa có số dư chuyển sang. Mã tài khoản lấy theo danh mục.</p>" });
+   Root.Controls.Add(new Literal { Text="<p class=\"muted\">Bảng cân đối được tổng hợp từ phiếu kế toán đã ghi sổ. Hóa đơn, kho và thanh toán chưa tự tạo bút toán; chưa có số dư chuyển sang. Mã tài khoản lấy theo danh mục.</p>" });
    var toolbar=new Panel { CssClass="context-toolbar" }; Root.Controls.Add(toolbar);
    if(!report)
    {
@@ -73,7 +73,7 @@ namespace ReportingModule.Web
    number=new TextBox { ID="Number",MaxLength=30 }; AddField(header,"Số phiếu *",number);
    date=new TextBox { ID="DocumentDate",TextMode=TextBoxMode.Date }; AddField(header,"Ngày *",date);
    note=new TextBox { ID="Note",MaxLength=500 }; AddField(header,"Diễn giải",note);
-   var hint=new HtmlGenericControl("p"); hint.Attributes["class"]="muted"; hint.InnerText="Dùng dấu chấm thập phân. Nợ/Có tối đa 4 số lẻ, mỗi dòng chỉ ghi một bên; bên còn lại nhập 0. Ghi sổ yêu cầu tổng Nợ = tổng Có. Dòng trống được bỏ qua. Phiếu đã ghi sổ không được sửa/xóa."; editor.Controls.Add(hint);
+   var hint=new HtmlGenericControl("p"); hint.Attributes["class"]="muted"; hint.InnerText=NumberParser.Hint+" Nợ/Có tối đa 4 số lẻ, mỗi dòng chỉ ghi một bên; bên còn lại nhập 0. Ghi sổ yêu cầu tổng Nợ = tổng Có. Dòng trống được bỏ qua. Phiếu đã ghi sổ không được sửa/xóa."; editor.Controls.Add(hint);
    detailHtml=new Literal(); editor.Controls.Add(detailHtml);
    add=Button(editor,"AddLine","Thêm dòng",()=>{if(lines.Count>=100) throw new ArgumentException("Tối đa 100 dòng."); lines.Add(new[]{"","",""});});
    remove=Button(editor,"RemoveLine","Bỏ dòng cuối",()=>{if(lines.Count>0) lines.RemoveAt(lines.Count-1);});
@@ -161,7 +161,7 @@ namespace ReportingModule.Web
    // Validate before replacing the active result criteria.
    if(report) store.Report(unit.SelectedValue,start,end);
    else store.List(unit.SelectedValue,start,end,filter.Text);
-   Criteria=new[]{unit.SelectedValue,from.Text,to.Text,filter.Text.Trim()}; grid.PageIndex=0; ClearEditor();
+   Criteria=new[]{unit.SelectedValue,from.Text,to.Text,filter.Text.Trim()}; grid.PageIndex=0; ClearEditor(); Session["CurrentUnit"]=unit.SelectedValue;
   }
   private void ClearEditor() { SelectedId=null; Version=null; editor.Visible=false; selection.Text=""; }
   private void NewDocument()
@@ -208,9 +208,9 @@ namespace ReportingModule.Web
    {
     if(ex.Number>=51501 && ex.Number<=51507) message.Text=HttpUtility.HtmlEncode(ex.Message);
     else if(ex.Number==2601||ex.Number==2627) message.Text="Số phiếu đã tồn tại trong đơn vị/loại này.";
-    else { Trace.Warn("Stock","SQL failed",ex); message.Text="Không thể xử lý dữ liệu; hãy làm tươi và thử lại. Kiểm tra kết nối SQL nếu lỗi tiếp diễn."; }
+    else { Log.Error("Stock","SQL failed",ex); message.Text="Không thể xử lý dữ liệu; hãy làm tươi và thử lại. Kiểm tra kết nối SQL nếu lỗi tiếp diễn."; }
    }
-   catch(Exception ex) { Trace.Warn("Stock","Request failed",ex); message.Text="Không thể xử lý yêu cầu. Kiểm tra dữ liệu rồi thử lại."; }
+   catch(Exception ex) { Log.Error("Stock","Request failed",ex); message.Text="Không thể xử lý yêu cầu. Kiểm tra dữ liệu rồi thử lại."; }
   }
   private string Details()
   {

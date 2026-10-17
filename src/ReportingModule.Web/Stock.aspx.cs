@@ -75,7 +75,7 @@ namespace ReportingModule.Web
    date=new TextBox { ID="DocumentDate",TextMode=TextBoxMode.Date }; AddField(header,"Ngày *",date);
    note=new TextBox { ID="Note",MaxLength=500 }; AddField(header,"Diễn giải",note);
    if(screen=="purchase-receipt") { supplier=new DropDownList { ID="Supplier" }; AddField(header,"Nhà cung cấp *",supplier); }
-   var hint=new HtmlGenericControl("p"); hint.Attributes["class"]="muted"; hint.InnerText="Dùng dấu chấm thập phân. Số lượng tối đa 3 số lẻ; đơn giá tối đa 4. Dòng trống được bỏ qua. Phiếu đã ghi sổ không được sửa/xóa."; editor.Controls.Add(hint);
+   var hint=new HtmlGenericControl("p"); hint.Attributes["class"]="muted"; hint.InnerText=NumberParser.Hint+" Số lượng tối đa 3 số lẻ; đơn giá tối đa 4. Dòng trống được bỏ qua. Phiếu đã ghi sổ không được sửa/xóa."; editor.Controls.Add(hint);
    detailHtml=new Literal(); editor.Controls.Add(detailHtml);
    add=Button(editor,"AddLine","Thêm dòng",()=>{if(lines.Count>=100) throw new ArgumentException("Tối đa 100 dòng."); lines.Add(new[]{"","",""});});
    remove=Button(editor,"RemoveLine","Bỏ dòng cuối",()=>{if(lines.Count>0) lines.RemoveAt(lines.Count-1);});
@@ -164,7 +164,7 @@ namespace ReportingModule.Web
    // Validate before replacing the active result criteria.
    if(report) store.Report(unit.SelectedValue,start,end,filter.Text,kind);
    else store.List(unit.SelectedValue,kind,start,end,filter.Text);
-   Criteria=new[]{unit.SelectedValue,from.Text,to.Text,filter.Text.Trim()}; grid.PageIndex=0; ClearEditor();
+   Criteria=new[]{unit.SelectedValue,from.Text,to.Text,filter.Text.Trim()}; grid.PageIndex=0; ClearEditor(); Session["CurrentUnit"]=unit.SelectedValue;
   }
   private void ClearEditor() { SelectedId=null; Version=null; editor.Visible=false; selection.Text=""; }
   private void NewDocument()
@@ -213,9 +213,9 @@ namespace ReportingModule.Web
    {
     if((ex.Number>=51201 && ex.Number<=51208)||(ex.Number>=51701&&ex.Number<=51799)) message.Text=HttpUtility.HtmlEncode(ex.Message);
     else if(ex.Number==2601||ex.Number==2627) message.Text="Số phiếu đã tồn tại trong đơn vị/loại này.";
-    else { Trace.Warn("Stock","SQL failed",ex); message.Text="Không thể xử lý dữ liệu; hãy làm tươi và thử lại. Kiểm tra kết nối SQL nếu lỗi tiếp diễn."; }
+    else { Log.Error("Stock","SQL failed",ex); message.Text="Không thể xử lý dữ liệu; hãy làm tươi và thử lại. Kiểm tra kết nối SQL nếu lỗi tiếp diễn."; }
    }
-   catch(Exception ex) { Trace.Warn("Stock","Request failed",ex); message.Text="Không thể xử lý yêu cầu. Kiểm tra dữ liệu rồi thử lại."; }
+   catch(Exception ex) { Log.Error("Stock","Request failed",ex); message.Text="Không thể xử lý yêu cầu. Kiểm tra dữ liệu rồi thử lại."; }
   }
   private string Details()
   {

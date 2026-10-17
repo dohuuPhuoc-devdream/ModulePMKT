@@ -30,7 +30,7 @@ namespace ReportingModule.Web
   }
   private string AdminPermission {get{return PermissionMap.View(screen);}}
   private void Guard(Action work)
-  {try{work();}catch(ArgumentException ex){message.Text=HttpUtility.HtmlEncode(ex.Message);}catch(System.Data.SqlClient.SqlException ex){if(ex.Number==2601||ex.Number==2627)message.Text="Mã hoặc tên đăng nhập đã tồn tại.";else{Trace.Warn("Admin","Administration query failed",ex);message.Text="Không thể xử lý yêu cầu quản trị.";}}catch(Exception ex){Trace.Warn("Admin","Administration failed",ex);message.Text="Không thể xử lý yêu cầu quản trị.";}}
+  {try{work();}catch(ArgumentException ex){message.Text=HttpUtility.HtmlEncode(ex.Message);}catch(System.Data.SqlClient.SqlException ex){if(ex.Number==2601||ex.Number==2627)message.Text="Mã hoặc tên đăng nhập đã tồn tại.";else{Log.Error("Admin","Administration query failed",ex);message.Text="Không thể xử lý yêu cầu quản trị.";}}catch(Exception ex){Log.Error("Admin","Administration failed",ex);message.Text="Không thể xử lý yêu cầu quản trị.";}}
   private void BuildUsers()
   {
    var search=new TextBox{ID="UserSearch",MaxLength=64};Root.Controls.Add(search);
@@ -56,7 +56,7 @@ namespace ReportingModule.Web
    roles.DataSource=store.Roles();roles.DataTextField="RoleName";roles.DataValueField="RoleCode";roles.DataBind();var currentRoles=SelectedUser.HasValue?store.UserRoles(SelectedUser.Value):new[]{"User"};foreach(ListItem item in roles.Items)item.Selected=currentRoles.Contains(item.Value,StringComparer.OrdinalIgnoreCase);
    panel.Controls.Add(new Literal{Text="<h3>Vai trò</h3>"});panel.Controls.Add(roles);
    var units=new CheckBoxList{ID="Units",RepeatLayout=RepeatLayout.Flow,RepeatDirection=RepeatDirection.Horizontal,CssClass="admin-check-list"};
-   units.DataSource=store.Units();units.DataTextField="TenDonVi";units.DataValueField="MaDonVi";units.DataBind();var currentUnits=SelectedUser.HasValue?store.UserUnits(SelectedUser.Value):new[]{"DVDEMO"};foreach(ListItem item in units.Items)item.Selected=currentUnits.Contains(item.Value,StringComparer.OrdinalIgnoreCase);
+   units.DataSource=store.Units();units.DataTextField="TenDonVi";units.DataValueField="MaDonVi";units.DataBind();var currentUnits=SelectedUser.HasValue?store.UserUnits(SelectedUser.Value):new string[0];foreach(ListItem item in units.Items)item.Selected=currentUnits.Contains(item.Value,StringComparer.OrdinalIgnoreCase);
    panel.Controls.Add(new Literal{Text="<h3>Đơn vị được phép truy cập</h3>"});panel.Controls.Add(units);
    panel.Controls.Add(new Literal{Text="<p class=\"muted\">Tài khoản không bị xóa để giữ nguyên tham chiếu nhật ký. Mật khẩu không được đọc lại.</p>"});
    AddButton(panel,"SaveUser","Lưu người dùng",()=>{store.SaveUser(SelectedUser,username.Text,display.Text,enabled.Checked,password.Text,roles.Items.Cast<ListItem>().Where(x=>x.Selected).Select(x=>x.Value).ToArray(),units.Items.Cast<ListItem>().Where(x=>x.Selected).Select(x=>x.Value).ToArray(),UserId);password.Text="";message.Text="Đã lưu người dùng.";},AdminPermission);

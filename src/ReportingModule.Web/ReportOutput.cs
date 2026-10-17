@@ -12,7 +12,7 @@ namespace ReportingModule.Web
  [Serializable] public sealed class OutputSnapshot
  {
   public string Screen,Title,Criteria,Summary,SourceUrl,UnitCode;
-  public string DocumentNumber,DocumentStatus,DocumentNote,PartnerCode,PartnerName,PartnerAddress,PartnerLabel,UnitName,DocumentTotal;
+  public string DocumentNumber,DocumentStatus,DocumentNote,PartnerCode,PartnerName,PartnerAddress,PartnerLabel,UnitName,DocumentTotal,DocumentTotalLabel;
   public DateTime Created,DocumentDate; public DataTable Data; public OutputColumn[] Columns;
   public string Text(DataRow row,OutputColumn c) { object v=row[c.Field]; if(v==DBNull.Value) return ""; return string.IsNullOrEmpty(c.Format)?Convert.ToString(v,CultureInfo.GetCultureInfo("vi-VN")):string.Format(CultureInfo.GetCultureInfo("vi-VN"),c.Format,v); }
  }
@@ -69,12 +69,12 @@ namespace ReportingModule.Web
    foreach(string f in new[]{"ThanhTien","PhatSinhNo","PhatSinhCo"}) if(lines.Columns.Contains(f)) summary+=" | Tổng "+titles[f]+": "+lines.Rows.Cast<DataRow>().Sum(r=>(decimal)r[f]).ToString("N4",CultureInfo.GetCultureInfo("vi-VN"));
    string total="";
    if(lines.Columns.Contains("ThanhTien")) total=lines.Rows.Cast<DataRow>().Sum(r=>r["ThanhTien"]==DBNull.Value?0m:Convert.ToDecimal(r["ThanhTien"])).ToString("N4",CultureInfo.GetCultureInfo("vi-VN"));
-   else if(lines.Columns.Contains("PhatSinhNo")) total=lines.Rows.Cast<DataRow>().Sum(r=>r["PhatSinhNo"]==DBNull.Value?0m:Convert.ToDecimal(r["PhatSinhNo"])).ToString("N4",CultureInfo.GetCultureInfo("vi-VN"));
+   else if(lines.Columns.Contains("PhatSinhNo")) total="Nợ: "+lines.Rows.Cast<DataRow>().Sum(r=>r["PhatSinhNo"]==DBNull.Value?0m:Convert.ToDecimal(r["PhatSinhNo"])).ToString("N4",CultureInfo.GetCultureInfo("vi-VN"))+" | Có: "+lines.Rows.Cast<DataRow>().Sum(r=>r["PhatSinhCo"]==DBNull.Value?0m:Convert.ToDecimal(r["PhatSinhCo"])).ToString("N4",CultureInfo.GetCultureInfo("vi-VN"));
    string partnerLabel=header.Table.Columns.Contains("MaKH")&&header["MaKH"]!=DBNull.Value?"Khách hàng":header.Table.Columns.Contains("MaNCC")&&header["MaNCC"]!=DBNull.Value?"Nhà cung cấp":"";
    string partnerName=header.Table.Columns.Contains("TenDoiTac")&&header["TenDoiTac"]!=DBNull.Value?Convert.ToString(header["TenDoiTac"]):"";
    string partnerAddress=header.Table.Columns.Contains("DiaChiDoiTac")&&header["DiaChiDoiTac"]!=DBNull.Value?Convert.ToString(header["DiaChiDoiTac"]):"";
    return Capture(new HttpSessionStateWrapper(context.Session),new OutputSnapshot { Screen=screen,Title=node.Title,Criteria=criteria,Summary=summary,Data=lines,UnitCode=Convert.ToString(header["MaDonVi"]),
-    DocumentNumber=number,DocumentDate=(DateTime)header["Ngay"],DocumentStatus=Convert.ToString(header["TrangThai"]),DocumentNote=Convert.ToString(header["DienGiai"]),PartnerCode=partner,DocumentTotal=total,
+    DocumentNumber=number,DocumentDate=(DateTime)header["Ngay"],DocumentStatus=Convert.ToString(header["TrangThai"]),DocumentNote=Convert.ToString(header["DienGiai"]),PartnerCode=partner,DocumentTotal=total,DocumentTotalLabel=lines.Columns.Contains("PhatSinhNo")?"Tổng Nợ / Có":"Tổng tiền hàng",
     UnitName=header.Table.Columns.Contains("TenDonVi")&&header["TenDonVi"]!=DBNull.Value?Convert.ToString(header["TenDonVi"]):"",PartnerName=partnerName,PartnerAddress=partnerAddress,PartnerLabel=partnerLabel,
     Columns=lines.Columns.Cast<DataColumn>().Where(c=>titles.ContainsKey(c.ColumnName)).Select(c=>new OutputColumn(c.ColumnName,titles[c.ColumnName],c.DataType==typeof(decimal)?(c.ColumnName=="SoLuong"?"{0:N3}":"{0:N4}"):"")).ToArray() });
   }
@@ -105,7 +105,7 @@ namespace ReportingModule.Web
    int index=0; foreach(DataRow row in s.Data.Rows) { b.Append("<tr><td>").Append(++index).Append("</td>"); foreach(var c in s.Columns) b.Append(c.Format.Contains(":N")?"<td class=\"numeric\">":"<td>").Append(h(s.Text(row,c))).Append("</td>"); b.Append("</tr>"); }
    if(s.Data.Rows.Count==0) b.Append("<tr><td colspan=\"").Append(s.Columns.Length+1).Append("\">Không có dòng chi tiết.</td></tr>");
    b.Append("</tbody></table>");
-   if(!string.IsNullOrEmpty(s.DocumentTotal)) b.Append("<p class=\"voucher-total\"><b>Tổng tiền hàng</b><strong>").Append(h(s.DocumentTotal)).Append("</strong></p>");
+   if(!string.IsNullOrEmpty(s.DocumentTotal)) b.Append("<p class=\"voucher-total\"><b>").Append(h(s.DocumentTotalLabel??"Tổng tiền hàng")).Append("</b><strong>").Append(h(s.DocumentTotal)).Append("</strong></p>");
    string[] signatures=SignatureLabels(s.Screen);
    b.Append("<div class=\"voucher-signatures\">"); foreach(string label in signatures) b.Append("<div><b>").Append(h(label)).Append("</b><span>(Ký, họ tên)</span></div>"); b.Append("</div></article>");
    return b.ToString();

@@ -29,6 +29,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Security.cs" />
+    <Compile Include="Log.cs" />
+    <Compile Include="NumberParser.cs" />
     <Compile Include="AdminStore.cs" />
     <Compile Include="Global.asax.cs"><DependentUpon>Global.asax</DependentUpon></Compile>
     <Compile Include="Login.aspx.cs"><DependentUpon>Login.aspx</DependentUpon><SubType>ASPXCodeBehind</SubType></Compile>

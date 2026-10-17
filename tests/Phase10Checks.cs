@@ -18,6 +18,11 @@ class Phase10Checks
   Check(salt.Length==16&&hash.Length==32&&PasswordHash.Verify(random,salt,hash,310000,1),"PBKDF2-HMAC-SHA256 accepts matching password");
   Check(!PasswordHash.Verify(random+"x",salt,hash,310000,1),"password hash rejects mismatched password");
   Reject(()=>PasswordHash.Create("short",salt),"short password policy enforced");
+  decimal parsed;
+  Check(NumberParser.TryParse("15.000",out parsed)&&parsed==15000m,"Vietnamese thousands separator remains a full amount");
+  Check(NumberParser.TryParse("1,5",out parsed)&&parsed==1.5m,"Vietnamese decimal comma parses fractions");
+  Check(NumberParser.TryParse("123.4567",out parsed)&&parsed==123.4567m,"four-decimal legacy prices remain exact");
+  Check(!NumberParser.TryParse("15.00",out parsed),"ambiguous dot decimals are rejected instead of silently changing value");
 
   var admin=new AdminStore(cs);
   string testPassword=Guid.NewGuid().ToString("N")+"aB3!";
@@ -28,8 +33,17 @@ class Phase10Checks
    using(var c=new SqlConnection(cs))using(var cmd=new SqlCommand("SELECT UserId FROM dbo.AppUser WHERE NormalizedUsername=@n",c)){cmd.Parameters.Add("@n",SqlDbType.NVarChar,64).Value=IdentityStore.NormalizeUsername(TestUsername);c.Open();userId=(Guid)cmd.ExecuteScalar();}
    var login=IdentityStore.Authenticate(TestUsername.ToLowerInvariant(),testPassword);
    Check(login.User!=null&&login.User.Id==userId,"normalized username authenticates");
+   Check(IdentityStore.Get(userId).MustChangePassword,"newly provisioned account is required to change its initial password");
+   Check(admin.UserRoles(userId).SequenceEqual(new[]{"User"})&&admin.UserUnits(userId).SequenceEqual(new[]{"DVDEMO"}),"admin user roles and unit assignments load without reopening connections");
+   Check(admin.RolePermissions(Convert.ToInt32(admin.Roles().Rows.Cast<DataRow>().Single(r=>(string)r["RoleCode"]=="User")["RoleId"])).Length>0,"admin role permission matrix loads without reopening connections");
    Check(PermissionService.IsAllowed(userId,"SALES.SALES_INVOICE.VIEW")&&!PermissionService.IsAllowed(userId,"SYSTEM.ADMIN_USERS.ADMIN"),"safe User role excludes administration");
    Check(UnitAccess.IsAllowed(userId,"DVDEMO")&&!UnitAccess.IsAllowed(userId,"NOT_ASSIGNED"),"unit scope follows assigned units");
+   Check(!IdentityStore.ChangePassword(userId,"wrong-current-password",testPassword),"wrong current password is rejected");
+   string changedPassword=Guid.NewGuid().ToString("N")+"aB3!";
+   Check(IdentityStore.ChangePassword(userId,testPassword,changedPassword),"password change opens connection before its transaction");
+   Check(!IdentityStore.Get(userId).MustChangePassword,"password change clears the required-change flag");
+   Check(IdentityStore.Authenticate(TestUsername,changedPassword).User!=null,"new password authenticates after change");
+   testPassword=changedPassword;
 
    var permissions=admin.Permissions().Rows.Cast<DataRow>().Select(r=>Convert.ToString(r["PermissionCode"])).ToArray();
    Check(permissions.Contains("SYSTEM.UNIT.CREATE"),"stable allowlisted unit permission exists");
@@ -39,6 +53,8 @@ class Phase10Checks
    Check(PermissionService.IsAllowed(userId,"SYSTEM.UNIT.CREATE"),"multiple enabled roles union effective permissions");
    admin.DisableRole(extra,Admin);
    Check(!PermissionService.IsAllowed(userId,"SYSTEM.UNIT.CREATE"),"disabled role permissions are excluded");
+   Reject(()=>admin.SaveRole(null,"P10_ESCALATE","Unauthorized role",new[]{"SYSTEM.UNIT.ADMIN"},userId),"user cannot create a role with permissions they do not hold");
+   Reject(()=>admin.SaveUser(userId,TestUsername,"Tài khoản kiểm thử",true,"",new[]{"Administrator"},new[]{"DVDEMO"},userId),"user cannot assign themselves Administrator");
 
    for(int i=0;i<5;i++)IdentityStore.Authenticate(TestUsername,"wrong-password");
    DataRow state=admin.User(userId);

@@ -18,7 +18,7 @@ namespace ReportingModule.Web
   private void BuildPayments()
   {
    paymentPanel=new Panel { ID="Payments",CssClass="catalog-editor",Visible=false }; editor.Controls.Add(paymentPanel);
-   paymentPanel.Controls.Add(new Literal { Text="<h2>Thanh toán hóa đơn</h2><p class=\"muted\">Ghi nhận thu/trả tiền theo hóa đơn, chưa hạch toán sổ cái. Số tiền dùng dấu chấm thập phân. Khoản đã ghi nhận không sửa/xóa tại đây.</p>" });
+   paymentPanel.Controls.Add(new Literal { Text="<h2>Thanh toán hóa đơn</h2><p class=\"muted\">Ghi nhận thu/trả tiền theo hóa đơn, chưa hạch toán sổ cái. "+HttpUtility.HtmlEncode(NumberParser.Hint)+" Khoản đã ghi nhận không sửa/xóa tại đây.</p>" });
    paymentBalance=new Label { CssClass="screen-status" }; paymentPanel.Controls.Add(paymentBalance);
    paymentGrid=new GridView { ID="PaymentHistory",CssClass="catalog-grid",AutoGenerateColumns=false,GridLines=GridLines.None,EmptyDataText="Chưa có thanh toán." };
    foreach(var pair in new[]{new[]{"SoThanhToan","Số tham chiếu"},new[]{"Ngay","Ngày"},new[]{"SoTien","Số tiền"},new[]{"DienGiai","Ghi chú"}})
@@ -38,7 +38,7 @@ namespace ReportingModule.Web
     RequireSelection();
     if(!ReadOnlyMode||!editor.Visible||!paymentPanel.Visible) throw new ArgumentException("Mở xem hóa đơn đã ghi sổ trước.");
     decimal amount;
-    if(!decimal.TryParse(paymentAmount.Text,NumberStyles.AllowDecimalPoint|NumberStyles.AllowLeadingSign,CultureInfo.InvariantCulture,out amount)) throw new ArgumentException("Số tiền dùng dấu chấm thập phân.");
+    if(!NumberParser.TryParse(paymentAmount.Text,out amount)) throw new ArgumentException("Số tiền không đúng định dạng. "+NumberParser.Hint);
     store.RecordPayment(SelectedId.Value,DraftUnit,kind,paymentNumber.Text,StockStore.Date(paymentDate.Text),amount,paymentNote.Text,PaymentRequest);
     Done("Đã ghi nhận thanh toán hóa đơn.");
    });

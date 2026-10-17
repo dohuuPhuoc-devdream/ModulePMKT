@@ -44,6 +44,7 @@ namespace ReportingModule.Web
    string selected = Request.QueryString["screen"] ?? "general";
    foreach (var module in Navigation.Modules)
    {
+    if(!module.Children.Any(HasVisibleChild)) continue;
     bool active = module.Contains(selected);
     html.Append("<li class=\"module").Append(active ? " active" : "").Append("\"><details><summary>")
         .Append(HttpUtility.HtmlEncode(module.Title)).Append("</summary><ul class=\"dropdown\">");

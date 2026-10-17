@@ -28,3 +28,5 @@ GO
 GO
 :r database/008-purchase-workflow.sql
 GO
+:r database/009-purchase-receipt-invoice-uniqueness.sql
+GO
