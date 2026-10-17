@@ -1,0 +1,64 @@
+*{box-sizing:border-box}body{margin:0;background:#f2f4f7;color:#243448;font:14px/1.5 "Segoe UI",Arial,sans-serif}a{color:inherit}button,summary{font:inherit}.shell-top{position:sticky;top:0;z-index:20;background:#fff}.app-header{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid #dce2e8}.app-name{text-decoration:none;font-size:17px;font-weight:700;color:#174d73}.app-name span{font-size:13px;font-weight:400;color:#536477;margin-left:12px}.environment{font-size:12px;color:#536477}.main-navigation{background:#194b70;color:#fff;padding:0 16px}.module-list{display:flex;list-style:none;padding:0;margin:0;gap:2px}.module{position:relative}.module>details>summary{padding:11px 16px;cursor:pointer;white-space:nowrap;list-style:none;font-weight:600}.module>details>summary:after{content:"⌄";margin-left:12px;font-size:12px}.module.active>details>summary,.module>details[open]>summary,.module>details>summary:hover{background:#103a59}.dropdown{position:absolute;top:100%;left:0;min-width:285px;max-height:calc(100dvh - 110px);overflow:auto;margin:0;padding:6px 0;background:#fff;color:#243448;border:1px solid #cbd5df;box-shadow:0 5px 12px #172f4820;list-style:none}.module:last-child .dropdown{left:auto;right:0}.dropdown a,.nested>summary{display:block;padding:8px 16px;text-decoration:none;cursor:pointer}.dropdown a:hover,.nested>summary:hover{background:#eef3f8}.dropdown a[aria-current]{background:#e3edf5;color:#164c73;font-weight:600;border-left:3px solid #245f87;padding-left:13px}.nested>summary{display:list-item;list-style-position:inside}.nested ul{list-style:none;margin:0;padding:0 0 0 14px;background:#f6f8fa}.workspace{padding:20px 24px;max-width:1800px;margin:auto}.breadcrumb{margin:0 0 3px;color:#617186;font-size:12px}h1{font-size:20px;font-weight:600;margin:0 0 16px}.context-toolbar{display:flex;flex-wrap:wrap;gap:6px;padding:9px 12px;background:#fff;border:1px solid #d2dce5}.context-toolbar button,.toolbar-refresh{border:1px solid #c6d1db;border-radius:3px;padding:5px 12px;background:#fff;font-size:13px;text-decoration:none;white-space:nowrap}.context-toolbar button:disabled{color:#687583;background:#f5f7f9;cursor:not-allowed}.toolbar-refresh{color:#174d73;margin-left:6px}.toolbar-refresh:hover{background:#eaf1f7}.function-content{background:#fff;border:1px solid #d2dce5;border-top:0;min-height:330px}.content-caption{display:flex;justify-content:space-between;background:#f7f9fb;border-bottom:1px solid #e0e6ec;padding:9px 14px;color:#536477;font-size:12px}.placeholder{padding:38px 24px}.placeholder h2{font-size:16px;margin:0 0 8px;font-weight:600}.placeholder p{margin:6px 0;max-width:700px}.muted,.screen-status{color:#617186;font-size:13px}.screen-status{margin:10px 0}.skip-link{position:fixed;left:12px;top:-60px;z-index:50;background:#fff;padding:10px}.skip-link:focus{top:8px}:focus-visible{outline:2px solid #b76b13;outline-offset:3px}@media(max-width:760px){.app-header{padding:0 12px}.app-name span,.environment{display:none}.main-navigation{padding:0 4px}.module-list{gap:0}.module>details>summary{font-size:12px;padding:10px 5px}.module>details>summary:after{display:none}.module{position:static}.dropdown{position:absolute;left:8px!important;right:8px!important;min-width:0;top:100%}.workspace{padding:14px 10px}.placeholder{padding:24px 16px}.content-caption{gap:12px}h1{font-size:18px}}
+
+.catalog-button{font:inherit;font-size:13px;border:1px solid #bac8d4;border-radius:3px;background:#fff;color:#234862;padding:5px 12px;cursor:pointer}.catalog-button:hover{background:#eaf1f7}.catalog-filter{display:flex;align-items:center;gap:8px;padding:12px 0;flex-wrap:wrap}.catalog-filter input[type=text]{width:280px}.catalog-message{display:block;white-space:pre-line;color:#8b3919;margin:8px 0}.catalog-selection{display:block;font-size:12px;color:#536477;margin:6px 0}.catalog-editor{border:1px solid #ccd7e0;background:#fff;padding:16px;margin:12px 0}.catalog-editor h2{font-size:16px;margin:0 0 12px}.catalog-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;max-width:1000px}.catalog-field label{display:block;font-size:13px;margin-bottom:4px}.catalog-field input,.catalog-filter input{font:inherit;padding:6px 8px;border:1px solid #aebdca;border-radius:3px;width:100%}.catalog-field input[readonly]{background:#f0f3f6}.catalog-editor>.catalog-button{margin:4px 6px 0 0}.catalog-grid-wrap{overflow:auto;background:#fff;border:1px solid #ccd7e0}.catalog-grid{border-collapse:collapse;width:100%;font-size:13px}.catalog-grid th{background:#e9eff4;text-align:left;white-space:nowrap}.catalog-grid th,.catalog-grid td{padding:8px 12px;border-bottom:1px solid #e0e6ec}.catalog-grid tr:hover td{background:#f5f8fb}.catalog-grid td.numeric{text-align:right;font-variant-numeric:tabular-nums}.catalog-grid a{color:#155a85}.catalog-grid-wrap+.screen-status{display:block;margin-top:10px}
+.stock-filter{align-items:flex-end}.stock-filter .catalog-field{max-width:240px}.stock-filter select{font:inherit;padding:6px 8px;border:1px solid #aebdca;border-radius:3px;max-width:240px}.catalog-editor .catalog-grid input{font:inherit;width:100%;min-width:100px;padding:6px;border:1px solid #aebdca;border-radius:3px}.catalog-editor .catalog-grid input[readonly]{background:#f0f3f6}.catalog-grid tfoot td{font-weight:600;background:#edf2f6}
+
+.balance-group td { font-weight: 650; background: #eef2f5; }
+.balance-account td:nth-child(2) { padding-left: 24px; }
+
+.output-grid { width: 100%; }
+.output-grid td { white-space: normal; overflow-wrap: anywhere; }
+@media print { @page { size: A4 landscape; margin: 10mm; } .shell-top, .skip-link, .no-print { display: none !important; } .workspace { margin: 0; padding: 0; } .output-grid { font-size: 9pt; } .output-grid thead { display: table-header-group; } .output-grid th { position: static; } .output-grid tr { break-inside: avoid; } body { background: white; } }
+
+/* Phase 9: retain compact ERP controls and make long grids usable. */
+.catalog-field select{font:inherit;width:100%;padding:6px 8px;border:1px solid #aebdca;border-radius:3px;background:#fff}
+.catalog-grid-wrap{max-height:65vh;isolation:isolate}
+.catalog-grid th{position:sticky;top:0;z-index:1}
+.catalog-grid tr.selected td{background:#e3edf5}
+.catalog-button:disabled{color:#687583;background:#f5f7f9;cursor:not-allowed}
+a.catalog-button{text-decoration:none;display:inline-block}
+.workflow-guide{padding-left:22px}.workflow-guide li{margin:8px 0}
+@media(max-width:480px){.module-list{flex-wrap:wrap}.module>details>summary{padding:8px 10px}.catalog-fields{grid-template-columns:minmax(0,1fr)}.catalog-filter input[type=text]{max-width:100%}.catalog-editor{padding:12px}.app-name{font-size:15px}}
+@media print{.catalog-grid-wrap{max-height:none;overflow:visible}.catalog-grid th{position:static}}
+
+/* Voucher print sheet follows the compact printed document style used by accounting systems. */
+.voucher-print{page:voucher;background:#fff;color:#1b2733;max-width:1120px;margin:18px auto;padding:34px 42px;border:1px solid #cbd5df}
+.voucher-brand{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #174d73;padding-bottom:10px;color:#174d73}
+.voucher-brand strong{font-size:18px}.voucher-brand span{font-size:12px;color:#536477}.voucher-date{text-align:center;margin:0 0 14px}
+.voucher-print h1{text-align:center;font-size:22px;margin:22px 0 18px;text-transform:uppercase}
+.voucher-meta{display:grid;grid-template-columns:1fr 1fr;gap:0 28px;border-top:1px solid #aebdca;border-left:1px solid #aebdca}
+.voucher-meta div{display:grid;grid-template-columns:145px 1fr;border-right:1px solid #aebdca;border-bottom:1px solid #aebdca;padding:8px 10px}
+.voucher-note{margin:16px 0}.voucher-lines{width:100%;border-collapse:collapse;margin:12px 0}
+.voucher-lines th,.voucher-lines td{border:1px solid #9eabb7;padding:7px 9px}.voucher-lines th{background:#e8eef3;text-align:left}.voucher-lines .numeric{text-align:right}
+.voucher-total{display:flex;justify-content:flex-end;gap:34px;border-top:1px solid #aebdca;padding:12px 8px}
+.voucher-signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:40px 0 24px;text-align:center}
+.voucher-signatures div{min-height:90px}.voucher-signatures span{display:block;font-size:12px;color:#536477;margin-top:5px}
+@page voucher{size:A4 portrait;margin:12mm}
+@media print{.voucher-print{max-width:none;margin:0;padding:0;border:0}.voucher-print h1{break-after:avoid}.voucher-lines tr{break-inside:avoid}}
+
+/* Phase 10: identity and administration share the existing compact ERP language. */
+.app-header{gap:18px}.environment{margin-left:auto;white-space:nowrap}
+.identity-panel{display:flex;align-items:center;justify-content:flex-end;gap:12px;font-size:12px;white-space:nowrap}
+.identity-name{font-weight:600;color:#263c50}.identity-role,.identity-unit{color:#536477}
+.header-action{color:#174d73;text-decoration:none;border-left:1px solid #cbd5df;padding-left:10px}
+.header-action:hover{text-decoration:underline}
+.admin-surface{max-width:1100px}.admin-check-list{display:flex;flex-wrap:wrap;gap:8px 18px;margin:5px 0 12px}
+
+/* Keep menu disclosure cues consistent and make the expanded state clear. */
+.module>details>summary,.nested>summary{display:flex;align-items:center;gap:9px}
+.module>details>summary::-webkit-details-marker,.nested>summary::-webkit-details-marker{display:none}
+.module>details>summary::marker,.nested>summary::marker{content:""}
+.module>details>summary::after,.nested>summary::after{content:"";display:block;flex:0 0 7px;width:7px;height:7px;margin-left:auto;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform 120ms ease}
+.module>details[open]>summary::after,.nested[open]>summary::after{transform:rotate(225deg) translate(-1px,-1px)}
+.module>details>summary:focus-visible,.nested>summary:focus-visible{outline:2px solid #f0b35a;outline-offset:-3px}
+@media(prefers-reduced-motion:reduce){.module>details>summary::after,.nested>summary::after{transition:none}}
+.admin-check-list label{margin:0 0 0 4px}.permission-matrix{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:3px 14px;margin:10px 0}
+.permission-matrix label{margin-left:5px;font-size:12px}.permission-matrix span{white-space:nowrap}
+.admin-surface h2,.catalog-editor h3{font-size:15px;margin:14px 0 8px}
+.login-body{min-height:100vh;display:grid;place-items:center;background:#edf1f5}
+.login-panel{width:min(430px,calc(100vw - 28px));padding:26px;background:#fff;border:1px solid #ccd7e0}
+.login-panel h1{margin-top:18px}.login-panel .catalog-field{margin:14px 0}
+.login-submit{margin-top:12px;min-width:120px;background:#194b70;color:#fff;border-color:#194b70}
+.login-submit:hover{background:#103a59}
+@media(max-width:900px){.app-header{height:auto;min-height:54px;flex-wrap:wrap;padding:8px 12px}.environment{margin-left:0}.identity-panel{width:100%;justify-content:flex-start;flex-wrap:wrap;white-space:normal;gap:7px 11px}}
+@media(max-width:540px){.permission-matrix{grid-template-columns:minmax(0,1fr)}}

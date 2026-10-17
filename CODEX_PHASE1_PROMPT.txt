@@ -1,0 +1,26 @@
+Read AGENTS.md, WALKTHROUGH.md, IMPLEMENTATION_PLAN.md and .agents/skills/design-taste-frontend/SKILL.md if present.
+
+V3 FINAL supersedes V1/V2. Architecture is locked:
+WEB; ASP.NET Framework Web Forms; C#/ASPX/HTML/CSS/JS; SQL Server/T-SQL; horizontal persistent navigation; exactly seven top-level modules (Hệ thống, Tổng hợp, Phải thu, Phải trả, Bán hàng, Mua hàng, Tồn kho); no sidebar; no standalone Báo cáo menu; reports live inside modules; context-sensitive toolbars; Làm tươi on every data/report screen.
+
+Do not ask architecture questions already answered by V3.
+
+Implement PHASE 1 ONLY:
+1. Inspect workspace and installed ASP.NET Framework/Web Forms tooling.
+2. Choose a sensible installed compatible .NET Framework target and record it.
+3. Create the Web Forms solution/project.
+4. Create shared ERP shell: header, persistent horizontal navigation, nested dropdown support, workspace/content area, compact reusable toolbar styling.
+5. Add the seven approved top-level menus and ONLY the representative submenu structure in WALKTHROUGH.md.
+6. Submenu destinations may be safe placeholders during Phase 1.
+7. Apply restrained design-taste-frontend guidance: dense ERP UI, no sidebar/dashboard cards, minimal motion.
+8. Build and fix Phase-1 build errors.
+9. Update IMPLEMENTATION_PLAN.md with framework, files changed, build command/result and real blockers.
+
+Do NOT implement database/schema, CRUD, document business logic, reports, Excel, PDF or print yet.
+
+End with:
+PHASE 1 RESULT
+FILES CREATED/CHANGED
+BUILD/VALIDATION RESULT
+NEXT PHASE
+Then STOP.

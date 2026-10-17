@@ -1,0 +1,25 @@
+Read AGENTS.md, WALKTHROUGH.md, and IMPLEMENTATION_PLAN.md again from the beginning.
+
+The requirements have been revised to match the FAST-like interaction model more accurately.
+
+Important changes:
+- Top horizontal navigation remains visible across functions.
+- Danh mục toolbar: Thêm | Sửa | Xóa | Tìm/Lọc | Import Data | Export Data | Làm tươi
+- Chứng từ toolbar: Thêm | Sửa | Xóa | Tìm/Lọc | In | Làm tươi
+- Báo cáo toolbar: Tìm/Lọc | In | Làm tươi
+- Làm tươi is mandatory on every Danh mục, Chứng từ and Báo cáo screen.
+- Catalog import/export is Excel-oriented.
+- A report is first displayed as a filtered result grid; print/export is an output representation.
+- design-taste-frontend may improve visuals but must preserve this FAST-like interaction model and stack constraints.
+
+Do NOT implement application code yet.
+
+Tasks:
+1. Re-read and reconcile V2 with your previous workspace findings.
+2. Inspect the current workspace again.
+3. Update IMPLEMENTATION_PLAN.md only if actual workspace state differs.
+4. Identify exactly which Phase 0 decisions still require my answer.
+5. For each unresolved decision, give a short recommended default and explain what it changes technically.
+6. Do not create a solution, database, dependency, or source file yet.
+
+Then STOP and wait for my decisions.
