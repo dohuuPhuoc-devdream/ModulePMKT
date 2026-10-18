@@ -81,15 +81,17 @@ class Phase5WebChecks
  static void Screen(string screen) { query="screen="+screen+"&unit="+unit+"&from=2026-01-01&to=2026-12-31"; }
  static Dictionary<string,string> Criteria(string item="HANG002")
  { return new Dictionary<string,string>{{"Unit",""+unit+""},{"From","2026-01-01"},{"To","2026-12-31"},{"Filter",item}}; }
- static Dictionary<string,string> Line(string qty)
- { return new Dictionary<string,string>{{"lineCount","1"},{"item0","HANG002"},{"qty0",qty},{"price0","100"}}; }
+ static Dictionary<string,string> Line(string qty,string price="100")
+ { return new Dictionary<string,string>{{"lineCount","1"},{"item0","HANG002"},{"qty0",qty},{"price0",price}}; }
  static CommerceResult Select(CommerceResult page)
  {
   var fields=Hidden(page.Body); fields["__EVENTTARGET"]="ctl00$WorkspaceContent$Records"; fields["__EVENTARGUMENT"]="Select$0";
   return Request(string.Join("&",fields.Select(kv=>HttpUtility.UrlEncode(kv.Key)+"="+HttpUtility.UrlEncode(kv.Value))));
  }
- static CommerceResult Save(CommerceResult page,string button,string number,string partner,string qty,string receiptId=null)
- { var controls=new Dictionary<string,string>{{"Number",number},{"DocumentDate","2026-01-05"},{"Note","Phase 5 isolated web test"},{"Partner",partner}}; if(receiptId!=null)controls["PurchaseReceipt"]=receiptId; return Post(page,button,controls,Line(qty)); }
+ static CommerceResult Save(CommerceResult page,string button,string number,string partner,string qty,string receiptId=null,string price="100")
+ { var controls=new Dictionary<string,string>{{"Number",number},{"DocumentDate","2026-01-05"},{"Note","Phase 5 isolated web test"},{"Partner",partner}}; if(receiptId!=null)controls["PurchaseReceipt"]=receiptId; return Post(page,button,controls,Line(qty,price)); }
+ static string InputValue(string html,string name)
+ { var m=Regex.Match(html,"<input[^>]*name=\""+Regex.Escape(name)+"\"[^>]*value=\"([^\"]*)\"",RegexOptions.IgnoreCase); if(!m.Success)throw new Exception("Missing input "+name);return HttpUtility.HtmlDecode(m.Groups[1].Value); }
  static void Main(string[] args)
  {
   Directory.CreateDirectory("artifacts/phase5");
@@ -99,17 +101,27 @@ class Phase5WebChecks
   try {
    runner=(CommerceRunner)ApplicationHost.CreateApplicationHost(typeof(CommerceRunner),"/",Path.GetFullPath(args[0]));
    foreach(string screen in new[]{"sales-order","purchase-order"}) {
-    Screen(screen); var p=Post(Request(),"New"); p=Save(p,"SaveDraft","ORDER",screen=="sales-order"?"KHDEMO001":"NCCDEMO001","1");
+    Screen(screen); var p=Post(Request(),"New"); p=Save(p,"SaveDraft","ORDER",screen=="sales-order"?"KHDEMO001":"NCCDEMO001",screen=="sales-order"?"1":"1,5",null,screen=="sales-order"?"100":"1234,5");
     Check(p.Status==302,screen+" draft saved");
-    p=Post(Select(Request()),"Edit"); p=Save(p,"SaveDraft","ORDER",screen=="sales-order"?"KHDEMO001":"NCCDEMO001","2");
-    Check(p.Status==302,screen+" draft edited");
+    p=Post(Select(Request()),"Edit");
+    if(screen=="purchase-order") {
+     string qty=InputValue(p.Body,"qty0"),price=InputValue(p.Body,"price0");
+     Check(qty=="1,5"&&price=="1.234,5","purchase draft edit fields use parseable Vietnamese numbers");
+     var controls=new Dictionary<string,string>{{"Number","ORDER"},{"DocumentDate","2026-01-05"},{"Note","Phase 5 isolated web test"},{"Partner","NCCDEMO001"}};
+     var raw=new Dictionary<string,string>{{"lineCount","1"},{"item0","HANG002"},{"qty0",qty},{"price0",price}};
+     p=Post(p,"SaveDraft",controls,raw);
+     Check(p.Status==302,"purchase draft saves unchanged localized decimal values");
+    } else p=Save(p,"SaveDraft","ORDER","KHDEMO001","2");
+    if(screen=="sales-order") Check(p.Status==302,screen+" draft edited");
     p=Post(Select(Request()),"Delete"); Check(p.Status==302,screen+" draft deleted");
    }
    long receipt=new StockStore(cs).Save(null,null,unit,"N","WEB-PR",first,"test receipt",new[]{new StockLine("HANG002",10,100)},true,"NCCDEMO001",true);
    Check(Navigation.PageFor("purchase-receipt")=="Stock.aspx","purchase receipt opens its own inventory workflow");
-   Screen("ap-invoice"); var page=Post(Request(),"New"); page=Save(page,"Post","WEB-PI","NCCDEMO001","10",receipt.ToString());
+   Screen("ap-invoice"); var invoiceForm=Post(Request(),"New"); var page=Save(invoiceForm,"Post","WEB-PI","NCCDEMO001","10",receipt.ToString());
    Check(page.Status==302,"AP invoice posts against a purchase receipt");
    Check((decimal)new StockStore(cs).Report(unit,first,last,"HANG002","T").Rows[0]["TonCuoi"]==10,"AP invoice does not add inventory a second time");
+   var duplicate=Save(invoiceForm,"Post","WEB-PI-DUP","NCCDEMO001","1",receipt.ToString());
+   Check(duplicate.Status==200&&HttpUtility.HtmlDecode(duplicate.Body).Contains("Phiếu nhập mua này đã được liên kết với một hóa đơn mua khác."),"duplicate receipt invoice shows a specific business message");
    page=Request(); Check(page.Body.Contains("WEB-PI"),"AP invoice appears in payables module");
    Screen("sales-invoice"); page=Post(Request(),"New"); page=Save(page,"Post","WEB-SI","KHDEMO001","3");
    Check(page.Status==302,"UI sales invoice posts");

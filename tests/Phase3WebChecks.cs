@@ -111,8 +111,8 @@ public class WebChecks
    selectedFields["__EVENTARGUMENT"]="Select$0";
    page=Request(string.Join("&",selectedFields.Select(kv=>HttpUtility.UrlEncode(kv.Key)+"="+HttpUtility.UrlEncode(kv.Value))));
    page=Post(page,"Edit");
-   Check(page.Body.Contains("Web form create"),"selected row loads edit form");
-   page=Post(page,"Save",new Dictionary<string,string>{{"Value0",testKey},{"Value1","Web form edited"},{"Value2","Cai"},{"Value3","13.1234"},{"Value4","21"}});
+   Check(page.Body.Contains("Web form create")&&page.Body.Contains("value=\"12,3456\"")&&page.Body.Contains("value=\"20\""),"selected row loads editable localized numeric values");
+   page=Post(page,"Save",new Dictionary<string,string>{{"Value0",testKey},{"Value1","Web form edited"},{"Value2","Cai"},{"Value3","12,3456"},{"Value4","20"}});
    Check(page.Status==302 && (string)store.Find(definition,testKey)[1]=="Web form edited","postback updates database row");
    page=Request(); selectedFields=Fields(page.Body);
    selectedFields["__EVENTTARGET"]="ctl00$WorkspaceContent$Records";

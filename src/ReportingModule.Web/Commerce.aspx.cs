@@ -213,7 +213,7 @@ namespace ReportingModule.Web
    if(receipt!=null) { BindPurchaseReceipts(); if(d.Header["ChungTuNhapMuaId"]!=DBNull.Value&&receipt.Items.FindByValue(Convert.ToString(d.Header["ChungTuNhapMuaId"]))!=null) receipt.SelectedValue=Convert.ToString(d.Header["ChungTuNhapMuaId"]); }
    Version=(byte[])d.Header["PhienBan"]; DraftUnit=Convert.ToString(d.Header["MaDonVi"]); ReadOnlyMode=view;
    number.Text=Convert.ToString(d.Header["SoChungTu"]); date.Text=((DateTime)d.Header["Ngay"]).ToString("yyyy-MM-dd"); note.Text=Convert.ToString(d.Header["DienGiai"]);
-   lines=d.Lines.Rows.Cast<DataRow>().Select(r=>new[]{Convert.ToString(r["MaHang"]),CatalogDefinition.Text(r["SoLuong"]),CatalogDefinition.Text(r["DonGia"])}).ToList(); editor.Visible=true;
+   lines=d.Lines.Rows.Cast<DataRow>().Select(r=>new[]{Convert.ToString(r["MaHang"]),NumberParser.Format(r["SoLuong"]),NumberParser.Format(r["DonGia"])}).ToList(); editor.Visible=true;
   }
   private void Save(bool posting)
   {
@@ -245,6 +245,7 @@ namespace ReportingModule.Web
    catch(SqlException ex)
    {
     if((ex.Number>=51201 && ex.Number<=51405)||(ex.Number>=51701&&ex.Number<=51799)) message.Text=HttpUtility.HtmlEncode(ex.Message);
+    else if((ex.Number==2601||ex.Number==2627)&&ex.Message.IndexOf("UX_CTTM_PurchaseReceipt",StringComparison.OrdinalIgnoreCase)>=0) message.Text="Phiếu nhập mua này đã được liên kết với một hóa đơn mua khác.";
     else if(ex.Number==2601||ex.Number==2627) message.Text="Số phiếu hoặc số tham chiếu thanh toán đã tồn tại.";
     else { Log.Error("Stock","SQL failed",ex); message.Text="Không thể xử lý dữ liệu; hãy làm tươi và thử lại. Kiểm tra kết nối SQL nếu lỗi tiếp diễn."; }
    }

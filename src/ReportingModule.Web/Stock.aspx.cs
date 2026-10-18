@@ -182,7 +182,7 @@ namespace ReportingModule.Web
    Version=(byte[])d.Header["PhienBan"]; DraftUnit=Convert.ToString(d.Header["MaDonVi"]); ReadOnlyMode=view;
    number.Text=Convert.ToString(d.Header["SoChungTu"]); date.Text=((DateTime)d.Header["Ngay"]).ToString("yyyy-MM-dd"); note.Text=Convert.ToString(d.Header["DienGiai"]);
    if(supplier!=null && d.Header["MaNCC"]!=DBNull.Value) supplier.SelectedValue=Convert.ToString(d.Header["MaNCC"]);
-   lines=d.Lines.Rows.Cast<DataRow>().Select(r=>new[]{Convert.ToString(r["MaHang"]),CatalogDefinition.Text(r["SoLuong"]),CatalogDefinition.Text(r["DonGia"])}).ToList(); editor.Visible=true;
+   lines=d.Lines.Rows.Cast<DataRow>().Select(r=>new[]{Convert.ToString(r["MaHang"]),NumberParser.Format(r["SoLuong"]),NumberParser.Format(r["DonGia"])}).ToList(); editor.Visible=true;
   }
   private void Save(bool posting)
   {

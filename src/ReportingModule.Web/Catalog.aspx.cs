@@ -122,7 +122,7 @@ namespace ReportingModule.Web
    button.Click+=(s,e)=>Guard(()=>RunAuthorized(definition.Id,id,action,entity:definition.Id,editing:Original!=null)); parent.Controls.Add(button); return button;
   }
   private void RequireSelection() { if(Original==null) throw new ArgumentException("Hãy chọn một dòng trước."); }
-  private void FillEditor() { for(int i=0;i<inputs.Count;i++) inputs[i].Text=CatalogDefinition.Text(Original[i]); }
+  private void FillEditor() { for(int i=0;i<inputs.Count;i++) inputs[i].Text=definition.Fields[i].Kind=="decimal"?NumberParser.Format(Original[i]):CatalogDefinition.Text(Original[i]); }
   private void ClearSelection() { Original=null; editor.Visible=false; grid.SelectedIndex=-1; }
   private void Guard(Action action)
   {

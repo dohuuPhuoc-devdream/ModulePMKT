@@ -50,7 +50,7 @@ class Phase3Checks
     var rows=CatalogExcel.Import(d,new MemoryStream(file));
     Check(rows.Count==1 && rows[0][0]==key && rows[0][1]=="Đã sửa",id+" Excel round-trip");
     if(id=="units") Check(rows[0][2]=="2026-01-01","numeric Excel date round-trip");
-    if(id=="items") Check(rows[0][3]=="123.4567","numeric Excel price round-trip");
+    if(id=="items") Check(rows[0][3]=="123,4567","numeric Excel price round-trip");
     string importKey=key+"I"; cleanup.Add(Tuple.Create(d,importKey));
     rows[0][0]=importKey;
     Check(store.Import(d,rows)==1,id+" atomic Excel insert");
@@ -95,7 +95,7 @@ class Phase3Checks
    {
     using(var input=File.OpenRead("artifacts/phase3/openpyxl-items.xlsx")) {
      var rows=CatalogExcel.Import(items,input);
-     Check(rows.Count==1 && rows[0][0]=="EXTERNAL" && rows[0][3]=="12.3456","independent Excel writer import");
+     Check(rows.Count==1 && rows[0][0]=="EXTERNAL" && rows[0][3]=="12,3456","independent Excel writer import");
     }
    }
    Check((string)store.Find(items,"HANG001")[0]=="HANG001","seed item preserved");

@@ -177,7 +177,7 @@ namespace ReportingModule.Web
    if(!view && Convert.ToString(d.Header["TrangThai"])!="DRAFT") throw new ArgumentException("Chỉ sửa được phiếu nháp.");
    Version=(byte[])d.Header["PhienBan"]; DraftUnit=Convert.ToString(d.Header["MaDonVi"]); ReadOnlyMode=view;
    number.Text=Convert.ToString(d.Header["SoPhieu"]); date.Text=((DateTime)d.Header["Ngay"]).ToString("yyyy-MM-dd"); note.Text=Convert.ToString(d.Header["DienGiai"]);
-   lines=d.Lines.Rows.Cast<DataRow>().Select(r=>new[]{Convert.ToString(r["MaTK"]),CatalogDefinition.Text(r["PhatSinhNo"]),CatalogDefinition.Text(r["PhatSinhCo"])}).ToList(); editor.Visible=true;
+   lines=d.Lines.Rows.Cast<DataRow>().Select(r=>new[]{Convert.ToString(r["MaTK"]),NumberParser.Format(r["PhatSinhNo"]),NumberParser.Format(r["PhatSinhCo"])}).ToList(); editor.Visible=true;
   }
   private void Save(bool posting)
   {

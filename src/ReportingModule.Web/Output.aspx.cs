@@ -26,21 +26,21 @@ namespace ReportingModule.Web
    RequirePermission(ReportOutput.PermissionFor(s.Screen,format));
    Title=s.Title+" | Kết xuất";
    if(format=="print") {
-    AuditOutput(s.Screen,format);
+    AuditOutput(s.Screen,format,s.UnitCode);
     Report.Text=ReportOutput.Html(s); Excel.NavigateUrl="Output.aspx?token="+id+"&format=xlsx"; Pdf.NavigateUrl="Output.aspx?token="+id+"&format=pdf";
     Excel.Visible=PermissionService.IsAllowed(UserId,ReportOutput.PermissionFor(s.Screen,"xlsx"));
     Pdf.Visible=PermissionService.IsAllowed(UserId,ReportOutput.PermissionFor(s.Screen,"pdf"));
     Back.NavigateUrl=s.SourceUrl??(Navigation.PageFor(s.Screen)+"?screen="+HttpUtility.UrlEncode(s.Screen)); return;
    }
    byte[] bytes=format=="xlsx"?ReportExcel.Export(s):ReportPdf.Export(s);
-   AuditOutput(s.Screen,format);
+   AuditOutput(s.Screen,format,s.UnitCode);
    Response.Clear(); Response.ContentType=format=="xlsx"?"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":"application/pdf";
    Response.AddHeader("Content-Disposition","attachment; filename="+s.Screen+"."+format); Response.AddHeader("X-Content-Type-Options","nosniff");
    Response.BinaryWrite(bytes); downloading=true; Context.ApplicationInstance.CompleteRequest();
   }
-  private void AuditOutput(string screen,string format)
+  private void AuditOutput(string screen,string format,string unitCode)
   {
-   try { IdentityStore.Audit(PermissionMap.Module(screen),PermissionMap.Function(screen),format=="xlsx"?"EXPORT":"PRINT","SUCCESS",format=="xlsx"?"Đã tải tệp Excel.":"Đã tạo bản in/PDF.",Session["CurrentUnit"] as string); }
+   try { IdentityStore.Audit(PermissionMap.Module(screen),PermissionMap.Function(screen),format=="xlsx"?"EXPORT":"PRINT","SUCCESS",format=="xlsx"?"Đã tải tệp Excel.":"Đã tạo bản in/PDF.",unitCode); }
    catch(Exception error) { Log.Error("Output","Output was generated but audit recording failed",error); }
   }
   private void ShowError(int status,string text)

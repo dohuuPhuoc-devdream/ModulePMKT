@@ -1,6 +1,7 @@
 using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Linq;
 using ReportingModule.Web;
 
@@ -23,6 +24,10 @@ class Phase10Checks
   Check(NumberParser.TryParse("1,5",out parsed)&&parsed==1.5m,"Vietnamese decimal comma parses fractions");
   Check(NumberParser.TryParse("123.4567",out parsed)&&parsed==123.4567m,"four-decimal legacy prices remain exact");
   Check(!NumberParser.TryParse("15.00",out parsed),"ambiguous dot decimals are rejected instead of silently changing value");
+  Check(!NumberParser.TryParse("0.500",out parsed),"leading-zero dot groups are rejected");
+  Check(NumberParser.FormatInput(12500.5m)=="12.500,5"&&NumberParser.TryParse(NumberParser.FormatInput(12500.5m),out parsed)&&parsed==12500.5m,"Excel decimals are formatted for the localized input parser");
+  foreach(decimal amount in new[]{16000.0000m,1234.5m,0.5m,123.4567m,-1500m,0m,999999999999999.9999m})
+   Check(NumberParser.TryParse(NumberParser.Format(amount),out parsed)&&parsed==amount,"localized numeric edit round-trip: "+amount.ToString(CultureInfo.InvariantCulture));
 
   var admin=new AdminStore(cs);
   string testPassword=Guid.NewGuid().ToString("N")+"aB3!";
