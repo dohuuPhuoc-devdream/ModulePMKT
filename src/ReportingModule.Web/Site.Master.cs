@@ -10,33 +10,64 @@ namespace ReportingModule.Web
  {
   protected PlaceHolder IdentityPanel;
   protected HiddenField CsrfToken;
+ private DropDownList workingUnit;
+ private Literal workingUnitLabel;
   protected override void OnInit(EventArgs e)
   {
    base.OnInit(e);
    if(Page.Session!=null && Page.Session["CsrfToken"]==null) Page.Session["CsrfToken"]=Guid.NewGuid().ToString("N");
    if(CsrfToken!=null&&Page.Session!=null) CsrfToken.Value=Convert.ToString(Page.Session["CsrfToken"]);
+   var id=CurrentIdentity.CurrentUserId();
+   if(id.HasValue&&IdentityPanel!=null)
+   {
+    var who=IdentityStore.Get(id.Value);
+    if(who!=null)
+    {
+     ListItem[] units=UnitAccess.Items(id.Value).ToArray();
+     string current=Convert.ToString(Page.Session["CurrentUnit"]);
+     if(!units.Any(x=>string.Equals(x.Value,current,StringComparison.OrdinalIgnoreCase)))
+     { current=units.FirstOrDefault()==null?"":units[0].Value; Page.Session["CurrentUnit"]=current; }
+     IdentityPanel.Controls.Add(new Literal { Text="<span class=\"identity-panel\"><span class=\"identity-name\">"+HttpUtility.HtmlEncode(who.DisplayName)+" / "+HttpUtility.HtmlEncode(who.Username)+"</span><span class=\"identity-role\">"+HttpUtility.HtmlEncode(string.Join(", ",who.Roles))+"</span><span class=\"identity-unit\">Đơn vị:</span>" });
+     workingUnit=new DropDownList { ID="WorkingUnit",CssClass="working-unit-picker",AutoPostBack=true,CausesValidation=false };
+     workingUnit.Attributes["aria-label"]="Đơn vị làm việc";
+     foreach(ListItem item in units) workingUnit.Items.Add(new ListItem(item.Text+" ("+item.Value+")",item.Value));
+     if(workingUnit.Items.FindByValue(current)!=null) workingUnit.SelectedValue=current;
+     workingUnit.Visible=units.Length>1;
+     workingUnit.SelectedIndexChanged+=ChangeWorkingUnit;
+     IdentityPanel.Controls.Add(workingUnit);
+     workingUnitLabel=new Literal { Text=HttpUtility.HtmlEncode(current) };
+     workingUnitLabel.Visible=units.Length<=1;
+     IdentityPanel.Controls.Add(workingUnitLabel);
+     IdentityPanel.Controls.Add(new Literal { Text="<a class=\"header-action\" href=\"ChangePassword.aspx\">Đổi mật khẩu</a><a class=\"header-action\" href=\"Logout.aspx\">Đăng xuất</a></span>" });
+    }
+   }
   }
   protected override void OnLoad(EventArgs e)
   {
    base.OnLoad(e);
-   if(Page.Session!=null)
-   {
-    if(CsrfToken!=null) CsrfToken.Value=Convert.ToString(Page.Session["CsrfToken"]);
-    var id=CurrentIdentity.CurrentUserId();
-    if(id.HasValue && IdentityPanel!=null)
-    {
-     var who=IdentityStore.Get(id.Value);
-     if(who!=null)
-     {
-      string[] units=UnitAccess.Items(id.Value).Select(x=>x.Value).ToArray();
-      string current=Convert.ToString(Page.Session["CurrentUnit"]);
-      if(!units.Contains(current)) { current=units.FirstOrDefault()??"";Page.Session["CurrentUnit"]=current; }
-      var identity=new Literal { Text="<span class=\"identity-panel\"><span class=\"identity-name\">"+HttpUtility.HtmlEncode(who.DisplayName)+" / "+HttpUtility.HtmlEncode(who.Username)+"</span><span class=\"identity-role\">"+HttpUtility.HtmlEncode(string.Join(", ",who.Roles))+"</span><span class=\"identity-unit\">Đơn vị: "+HttpUtility.HtmlEncode(current)+"</span><a class=\"header-action\" href=\"ChangePassword.aspx\">Đổi mật khẩu</a><a class=\"header-action\" href=\"Logout.aspx\">Đăng xuất</a></span>" };
-      IdentityPanel.Controls.Add(identity);
-     }
-    }
-   }
    if(CsrfToken!=null&&Page.Session!=null&&Page.Session["CsrfToken"]!=null) CsrfToken.Value=Convert.ToString(Page.Session["CsrfToken"]);
+  }
+  private void ChangeWorkingUnit(object sender,EventArgs e)
+  {
+   string expected=Convert.ToString(Page.Session["CsrfToken"]),actual=Page.Request.Form[CsrfToken.UniqueID];
+   if(string.IsNullOrEmpty(expected)||!string.Equals(expected,actual,StringComparison.Ordinal)) throw new HttpException(400,"Yêu cầu không hợp lệ. Hãy tải lại trang.");
+   var id=CurrentIdentity.CurrentUserId();
+   if(!id.HasValue) throw new HttpException(401,"Yêu cầu đăng nhập.");
+   UnitAccess.Demand(workingUnit.SelectedValue);
+   Page.Session["CurrentUnit"]=workingUnit.SelectedValue;
+   string screen=Page.Request.QueryString["screen"],module;
+   string path=VirtualPathUtility.ToAbsolute(Page.Request.AppRelativeCurrentExecutionFilePath);
+   string target=path;
+   if(!string.IsNullOrEmpty(screen)&&Navigation.Find(screen,out module)!=null)
+    target+="?screen="+HttpUtility.UrlEncode(screen)+"&unit="+HttpUtility.UrlEncode(workingUnit.SelectedValue);
+   Page.Response.Redirect(target,true);
+  }
+  protected override void OnPreRender(EventArgs e)
+  {
+   base.OnPreRender(e);
+   string current=Convert.ToString(Page.Session["CurrentUnit"]);
+   if(workingUnit!=null&&workingUnit.Items.FindByValue(current)!=null) workingUnit.SelectedValue=current;
+   if(workingUnitLabel!=null) workingUnitLabel.Text=HttpUtility.HtmlEncode(current);
   }
   protected string RenderNavigation()
   {

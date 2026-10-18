@@ -136,7 +136,8 @@ namespace ReportingModule.Web
    if(!IsPostBack)
    {
     from.Text=units!=null&&units.Rows.Count>0?((DateTime)units.Rows[0]["NgayBatDau"]).ToString("yyyy-MM-dd"):"2026-01-01"; to.Text=DateTime.Today.ToString("yyyy-MM-dd");
-    if(Request.QueryString["unit"]!=null && unit.Items.FindByValue(Request.QueryString["unit"])!=null) unit.SelectedValue=Request.QueryString["unit"];
+    string preferredUnit=Request.QueryString["unit"]??Convert.ToString(Session["CurrentUnit"]);
+    if(!string.IsNullOrEmpty(preferredUnit)&&unit.Items.FindByValue(preferredUnit)!=null) unit.SelectedValue=preferredUnit;
     DateTime parsed;
     if(DateTime.TryParseExact(Request.QueryString["from"],"yyyy-MM-dd",CultureInfo.InvariantCulture,DateTimeStyles.None,out parsed)) from.Text=parsed.ToString("yyyy-MM-dd");
     if(DateTime.TryParseExact(Request.QueryString["to"],"yyyy-MM-dd",CultureInfo.InvariantCulture,DateTimeStyles.None,out parsed)) to.Text=parsed.ToString("yyyy-MM-dd");

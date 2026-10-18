@@ -48,7 +48,7 @@ public class CommerceRunner : MarshalByRefObject
 }
 class Phase5WebChecks
 {
- static string unit; static CommerceRunner runner; static CommerceStore store; static string cookie,query;
+ static string unit,alternateUnit; static CommerceRunner runner; static CommerceStore store; static string cookie,query;
  static DateTime first=new DateTime(2026,1,1),last=new DateTime(2026,12,31);
  static void Check(bool condition,string name) { if(!condition) throw new Exception(name); Console.WriteLine("PASS: "+name); }
  static CommerceResult Request(string post=null)
@@ -96,10 +96,20 @@ class Phase5WebChecks
  {
   Directory.CreateDirectory("artifacts/phase5");
   string cs="Data Source=.\\SQLEXPRESS;Initial Catalog=ReportingModuleDemo;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;Connect Timeout=10";
-  store=new CommerceStore(cs); unit="W5"+Guid.NewGuid().ToString("N").Substring(0,10);
+  store=new CommerceStore(cs); unit="W5"+Guid.NewGuid().ToString("N").Substring(0,10);alternateUnit="W5X"+Guid.NewGuid().ToString("N").Substring(0,9);
   new CatalogStore(cs).Create(CatalogDefinition.Get("units"),new[]{unit,"Phase 5 UI test","2026-01-01"});
+  new CatalogStore(cs).Create(CatalogDefinition.Get("units"),new[]{alternateUnit,"Phase 5 alternate unit","2026-01-01"});
   try {
    runner=(CommerceRunner)ApplicationHost.CreateApplicationHost(typeof(CommerceRunner),"/",Path.GetFullPath(args[0]));
+   Screen("sales-order");var unitPage=Request();
+   Check(unitPage.Body.Contains("name=\"ctl00$WorkingUnit\"")&&unitPage.Body.Contains(alternateUnit),"header unit switcher lists units available to the administrator");
+   var forgedSwitch=Hidden(unitPage.Body);forgedSwitch.Remove("ctl00$CsrfToken");forgedSwitch["ctl00$WorkingUnit"]=alternateUnit;forgedSwitch["__EVENTTARGET"]="ctl00$WorkingUnit";forgedSwitch["__EVENTARGUMENT"]="";
+   Check(Request(string.Join("&",forgedSwitch.Select(kv=>HttpUtility.UrlEncode(kv.Key)+"="+HttpUtility.UrlEncode(kv.Value)))).Status==400,"header unit switch rejects a missing anti-CSRF token");
+   var switchFields=Hidden(unitPage.Body);switchFields["ctl00$WorkingUnit"]=alternateUnit;switchFields["__EVENTTARGET"]="ctl00$WorkingUnit";switchFields["__EVENTARGUMENT"]="";
+   var switched=Request(string.Join("&",switchFields.Select(kv=>HttpUtility.UrlEncode(kv.Key)+"="+HttpUtility.UrlEncode(kv.Value))));
+   Check(switched.Status==302&&switched.Location.Contains("unit="+alternateUnit),"header unit switch validates selection and refreshes the current function");
+   query="screen=sales-order&unit="+HttpUtility.UrlEncode(alternateUnit)+"&from=2026-01-01&to=2026-12-31";
+   var switchedPage=Request();Check(Regex.IsMatch(switchedPage.Body,"<option[^>]*selected=\"selected\"[^>]*value=\""+Regex.Escape(alternateUnit)+"\""),"selected working unit is retained in the document filter");
    foreach(string screen in new[]{"sales-order","purchase-order"}) {
     Screen(screen); var p=Post(Request(),"New"); p=Save(p,"SaveDraft","ORDER",screen=="sales-order"?"KHDEMO001":"NCCDEMO001",screen=="sales-order"?"1":"1,5",null,screen=="sales-order"?"100":"1234,5");
     Check(p.Status==302,screen+" draft saved");
@@ -141,8 +151,8 @@ class Phase5WebChecks
    query="screen=unknown"; Check(Request().Status==404,"unknown route rejected");
   } finally {
    using(var db=new System.Data.SqlClient.SqlConnection(cs)) { db.Open(); using(var cmd=db.CreateCommand()) {
-    cmd.CommandText="SET QUOTED_IDENTIFIER ON; SET ARITHABORT ON; UPDATE dbo.ChungTuThuongMai SET ChungTuNhapMuaId=NULL WHERE MaDonVi=@u; DELETE d FROM dbo.CTChungTuKho d JOIN dbo.ChungTuKho h ON h.ChungTuKhoId=d.ChungTuKhoId WHERE h.MaDonVi=@u; DELETE dbo.ChungTuKho WHERE MaDonVi=@u; DELETE d FROM dbo.CTChungTuThuongMai d JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=d.ChungTuId WHERE h.MaDonVi=@u; DELETE dbo.ChungTuThuongMai WHERE MaDonVi=@u; DELETE dbo.DonVi WHERE MaDonVi=@u;";
-    cmd.Parameters.AddWithValue("@u",unit); cmd.ExecuteNonQuery();
+    cmd.CommandText="SET QUOTED_IDENTIFIER ON; SET ARITHABORT ON; UPDATE dbo.ChungTuThuongMai SET ChungTuNhapMuaId=NULL WHERE MaDonVi IN(@u,@x); DELETE d FROM dbo.CTChungTuKho d JOIN dbo.ChungTuKho h ON h.ChungTuKhoId=d.ChungTuKhoId WHERE h.MaDonVi IN(@u,@x); DELETE dbo.ChungTuKho WHERE MaDonVi IN(@u,@x); DELETE d FROM dbo.CTChungTuThuongMai d JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=d.ChungTuId WHERE h.MaDonVi IN(@u,@x); DELETE dbo.ChungTuThuongMai WHERE MaDonVi IN(@u,@x); DELETE dbo.DonVi WHERE MaDonVi IN(@u,@x);";
+    cmd.Parameters.AddWithValue("@u",unit);cmd.Parameters.AddWithValue("@x",alternateUnit); cmd.ExecuteNonQuery();
    } }
   }
   Console.WriteLine("PHASE 5 WEB FORMS CHECKS PASSED; fixtures removed.");

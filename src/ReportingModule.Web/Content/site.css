@@ -42,6 +42,7 @@ a.catalog-button{text-decoration:none;display:inline-block}
 .identity-name{font-weight:600;color:#263c50}.identity-role,.identity-unit{color:#536477}
 .header-action{color:#174d73;text-decoration:none;border-left:1px solid #cbd5df;padding-left:10px}
 .header-action:hover{text-decoration:underline}
+.working-unit-picker{max-width:220px;border:1px solid #cbd5df;border-radius:3px;background:#fff;color:#243448;padding:3px 6px;font:inherit;font-size:12px}
 .admin-surface{max-width:1100px}.admin-check-list{display:flex;flex-wrap:wrap;gap:8px 18px;margin:5px 0 12px}
 
 /* Keep menu disclosure cues consistent and make the expanded state clear. */
