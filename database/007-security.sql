@@ -5,7 +5,6 @@ DECLARE @lock int;
 EXEC @lock=sys.sp_getapplock @Resource=N'ReportingModule.Schema',@LockMode='Exclusive',@LockOwner='Transaction',@LockTimeout=10000;
 IF @lock<0 THROW 51600,'Cannot acquire schema lock.',1;
 IF NOT EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version=5) THROW 51601,'Ledger schema version 5 required.',1;
-IF EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version>8) THROW 51602,'Database is newer than this migration.',1;
 IF NOT EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version=6)
 BEGIN
  CREATE TABLE dbo.AppUser(

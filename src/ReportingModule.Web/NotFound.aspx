@@ -1,2 +1,2 @@
 <%@ Page Language="C#" %>
-<!DOCTYPE html><html lang="vi"><head runat="server"><meta charset="utf-8" /><title>Không tìm thấy | PicoCorp Accounting</title><link href="Content/site.css" rel="stylesheet" /></head><body><main class="workspace"><h1>Không tìm thấy chức năng</h1><p>Địa chỉ này không tồn tại hoặc đã thay đổi.</p><a href="Default.aspx">Quay lại ứng dụng</a></main></body></html>
+<!DOCTYPE html><html lang="vi"><head runat="server"><meta charset="utf-8" /><title>Không tìm thấy | <%: ReportingModule.Web.AppIdentity.ProductName %></title><link href="Content/site.css" rel="stylesheet" /></head><body><main class="workspace"><h1>Không tìm thấy chức năng</h1><p>Địa chỉ này không tồn tại hoặc đã thay đổi.</p><a href="Default.aspx">Quay lại ứng dụng</a></main></body></html>

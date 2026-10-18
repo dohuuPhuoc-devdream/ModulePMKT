@@ -89,25 +89,23 @@ namespace ReportingModule.Web
     rows[rowIndex-1].Add(Styled(Column(colIndex)+(rowIndex),v,style));
    };
    Action<int,int,string,int> label=(rowIndex,colIndex,v,style)=>put(rowIndex,colIndex,v,style);
-   label(1,0,"PicoCorp Accounting",4);
-   put(2,0,s.UnitName??"",7);
-   put(3,0,(s.Title??"").ToUpperInvariant(),5);
-   put(4,0,"Ngày "+s.DocumentDate.ToString("dd 'tháng' MM 'năm' yyyy",CultureInfo.GetCultureInfo("vi-VN")),7);
-   put(4,2,"Số chứng từ: "+(s.DocumentNumber??""),7);
-   label(6,0,"Đơn vị",6);put(6,1,(s.UnitName??"")+(string.IsNullOrEmpty(s.UnitCode)?"":" ("+s.UnitCode+")"),7);
-   int r=7;
-   if(!string.IsNullOrEmpty(s.PartnerCode)){label(r,0,s.PartnerLabel??"Đối tác",6);put(r,1,(s.PartnerName??"")+(string.IsNullOrEmpty(s.PartnerCode)?"":" ("+s.PartnerCode+")"),7);r++;}
+   bool purchaseReceipt=s.Screen=="purchase-receipt";
+   label(1,0,purchaseReceipt?(s.UnitLegalName??s.UnitName):AppIdentity.ProductName,4);
+   if(purchaseReceipt){if(!string.IsNullOrWhiteSpace(s.UnitAddress))put(2,0,s.UnitAddress,7);if(!string.IsNullOrWhiteSpace(s.UnitTaxCode))put(3,0,"Mã số thuế: "+s.UnitTaxCode,7);put(4,0,"PHIẾU NHẬP MUA",5);put(5,0,"Ngày "+s.DocumentDate.ToString("dd 'tháng' MM 'năm' yyyy",CultureInfo.GetCultureInfo("vi-VN")),7);put(5,3,"Số phiếu: "+(s.DocumentNumber??""),7);if(!string.IsNullOrWhiteSpace(s.DeliveryPerson)){put(7,0,"Người giao hàng",6);put(7,1,s.DeliveryPerson,7);}if(!string.IsNullOrWhiteSpace(s.PartnerName)){put(8,0,"Đơn vị",6);put(8,1,s.PartnerName,7);}if(!string.IsNullOrWhiteSpace(s.PartnerAddress)){put(9,0,"Địa chỉ",6);put(9,1,s.PartnerAddress,7);}if(!string.IsNullOrWhiteSpace(s.DocumentNote)){put(10,0,"Diễn giải",6);put(10,1,s.DocumentNote,7);}}
+   else {put(2,0,s.UnitName??"",7);put(3,0,(s.Title??"").ToUpperInvariant(),5);put(4,0,"Ngày "+s.DocumentDate.ToString("dd 'tháng' MM 'năm' yyyy",CultureInfo.GetCultureInfo("vi-VN")),7);put(4,2,"Số chứng từ: "+(s.DocumentNumber??""),7);label(6,0,"Đơn vị",6);put(6,1,(s.UnitName??"")+(string.IsNullOrEmpty(s.UnitCode)?"":" ("+s.UnitCode+")"),7);}
+   int r=purchaseReceipt?12:7;
+   if(!purchaseReceipt){if(!string.IsNullOrEmpty(s.PartnerCode)){label(r,0,s.PartnerLabel??"Đối tác",6);put(r,1,(s.PartnerName??"")+(string.IsNullOrEmpty(s.PartnerCode)?"":" ("+s.PartnerCode+")"),7);r++;}
    if(!string.IsNullOrEmpty(s.PartnerAddress)){label(r,0,"Địa chỉ",6);put(r,1,s.PartnerAddress,7);r++;}
-   if(!string.IsNullOrEmpty(s.DocumentNote)){label(r,0,"Diễn giải",6);put(r,1,s.DocumentNote,7);r++;}
+   if(!string.IsNullOrEmpty(s.DocumentNote)){label(r,0,"Diễn giải",6);put(r,1,s.DocumentNote,7);r++;}}
    r+=1;int headerRow=r;put(r,0,"STT",8);
    for(int c=0;c<s.Columns.Length;c++) put(r,c+1,s.Columns[c].Title,8);
    int firstLine=headerRow+1,index=0;
    foreach(DataRow dataRow in s.Data.Rows){r=firstLine+index;put(r,0,++index,9);for(int c=0;c<s.Columns.Length;c++){
-     var outputColumn=s.Columns[c];object value=dataRow[outputColumn.Field];int style=outputColumn.Format.Contains("N3")?10:outputColumn.Format.Contains("N")?11:9;
+     var outputColumn=s.Columns[c];object value=dataRow[outputColumn.Field];int style=purchaseReceipt?(outputColumn.Field=="SoLuong"?15:outputColumn.Field=="DonGia"?16:outputColumn.Field=="ThanhTien"?17:9):outputColumn.Format.Contains("N3")?10:outputColumn.Format.Contains("N")?11:9;
      put(r,c+1,value,style);
     }}
-   int totalRow=firstLine+s.Data.Rows.Count+1;
-   put(totalRow,s.Data.Columns.Contains("PhatSinhNo")?0:Math.Max(0,columnCount-2),s.DocumentTotalLabel??"Tổng cộng",12);
+   int totalRow=purchaseReceipt?Math.Max(firstLine+s.Data.Rows.Count,firstLine+9)+1:firstLine+s.Data.Rows.Count+1;
+   put(totalRow,s.Data.Columns.Contains("PhatSinhNo")||purchaseReceipt?0:Math.Max(0,columnCount-2),s.DocumentTotalLabel??"Tổng cộng",12);
    decimal total=0m;
    if(s.Data.Columns.Contains("ThanhTien")) { foreach(DataRow dr in s.Data.Rows) if(dr["ThanhTien"]!=DBNull.Value) total+=Convert.ToDecimal(dr["ThanhTien"]); }
    else if(s.Data.Columns.Contains("PhatSinhNo")) {
@@ -116,14 +114,17 @@ namespace ReportingModule.Web
     if(debitColumn>=0)put(totalRow,debitColumn+1,debit,13);if(creditColumn>=0)put(totalRow,creditColumn+1,credit,13);
    } else put(totalRow,columnCount-1,total,13);
    if(s.Data.Columns.Contains("ThanhTien"))put(totalRow,columnCount-1,total,13);
-   int signRow=totalRow+3;string[] signatures=ReportOutput.SignatureLabels(s.Screen);
+   if(purchaseReceipt){int moneyCol=Array.FindIndex(s.Columns,c=>c.Field=="ThanhTien")+1;string moneyAddress=Column(moneyCol)+totalRow;var totalCell=rows[totalRow-1].Elements(S+"c").FirstOrDefault(c=>(string)c.Attribute("r")==moneyAddress);if(totalCell!=null){totalCell.SetAttributeValue("s",18);totalCell.RemoveNodes();totalCell.Add(new XElement(S+"f","SUM("+Column(moneyCol)+firstLine+":"+Column(moneyCol)+(totalRow-1)+")"),new XElement(S+"v",total.ToString(CultureInfo.InvariantCulture)));}put(totalRow+1,0,"Số tiền viết bằng chữ: "+s.AmountInWords,7);put(totalRow+3,0,"Ngày……tháng……năm…………",7);}
+   int signRow=totalRow+(purchaseReceipt?5:3);string[] signatures=ReportOutput.SignatureLabels(s.Screen);
+   if(purchaseReceipt)signatures=new[]{"Người giao hàng","PT nhập hàng","Người nhận hàng","Thủ kho"};
    for(int i=0;i<signatures.Length;i++){int c=i*columnCount/signatures.Length;put(signRow,c,signatures[i],14);put(signRow+1,c,"(Ký, họ tên)",7);}
    var merges=new List<XElement>{new XElement(S+"mergeCell",new XAttribute("ref","A1:"+last+"1")),new XElement(S+"mergeCell",new XAttribute("ref","A2:"+last+"2")),new XElement(S+"mergeCell",new XAttribute("ref","A3:"+last+"3")),new XElement(S+"mergeCell",new XAttribute("ref","A4:B4")),new XElement(S+"mergeCell",new XAttribute("ref","C4:"+last+"4"))};
    for(int mr=6;mr<headerRow;mr++) if(rows[mr-1].Elements(S+"c").Count()>1) merges.Add(new XElement(S+"mergeCell",new XAttribute("ref","B"+mr+":"+last+mr)));
+   if(purchaseReceipt){foreach(int mr in new[]{2,3,4,totalRow+1,totalRow+3})merges.Add(new XElement(S+"mergeCell",new XAttribute("ref","A"+mr+":"+last+mr)));merges.Add(new XElement(S+"mergeCell",new XAttribute("ref","A"+totalRow+":"+Column(columnCount-2)+totalRow)));}
    var columns=new XElement(S+"cols",Enumerable.Range(1,columnCount).Select(i=>new XElement(S+"col",new XAttribute("min",i),new XAttribute("max",i),new XAttribute("width",i==1?9:i==2?24:18),new XAttribute("customWidth",1))));
-   var sheet=new XElement(S+"worksheet",new XElement(S+"sheetViews",new XElement(S+"sheetView",new XAttribute("workbookViewId",0))),columns,new XElement(S+"sheetFormatPr",new XAttribute("defaultRowHeight",22)),new XElement(S+"sheetData",rows),new XElement(S+"mergeCells",new XAttribute("count",merges.Count),merges),new XElement(S+"printOptions",new XAttribute("horizontalCentered",1)),new XElement(S+"pageMargins",new XAttribute("left",0.3),new XAttribute("right",0.3),new XAttribute("top",0.5),new XAttribute("bottom",0.5),new XAttribute("header",0.2),new XAttribute("footer",0.2)),new XElement(S+"pageSetup",new XAttribute("paperSize",9),new XAttribute("orientation","portrait"),new XAttribute("fitToWidth",1),new XAttribute("fitToHeight",0)));
+   var sheet=new XElement(S+"worksheet",new XElement(S+"sheetViews",new XElement(S+"sheetView",new XAttribute("workbookViewId",0))),columns,new XElement(S+"sheetFormatPr",new XAttribute("defaultRowHeight",22)),new XElement(S+"sheetData",rows),new XElement(S+"mergeCells",new XAttribute("count",merges.Count),merges),new XElement(S+"printOptions",new XAttribute("horizontalCentered",1)),new XElement(S+"pageMargins",new XAttribute("left",0.3),new XAttribute("right",0.3),new XAttribute("top",0.5),new XAttribute("bottom",0.5),new XAttribute("header",0.2),new XAttribute("footer",0.2)),new XElement(S+"pageSetup",new XAttribute("paperSize",9),new XAttribute("orientation",purchaseReceipt?"landscape":"portrait"),new XAttribute("fitToWidth",1),new XAttribute("fitToHeight",0)));
    XDocument styles=XDocument.Parse(@"<styleSheet xmlns='http://schemas.openxmlformats.org/spreadsheetml/2006/main'>
-    <numFmts count='2'><numFmt numFmtId='164' formatCode='#,##0.0000'/><numFmt numFmtId='165' formatCode='#,##0.000'/></numFmts>
+    <numFmts count='3'><numFmt numFmtId='164' formatCode='#,##0.0000'/><numFmt numFmtId='165' formatCode='#,##0.000'/><numFmt numFmtId='166' formatCode='#,##0.00'/></numFmts>
     <fonts count='4'><font><sz val='10'/><name val='Arial'/></font><font><b/><sz val='11'/><color rgb='FF174D73'/><name val='Arial'/></font><font><b/><sz val='16'/><name val='Arial'/></font><font><b/><sz val='10'/><name val='Arial'/></font></fonts>
     <fills count='4'><fill><patternFill patternType='none'/></fill><fill><patternFill patternType='gray125'/></fill><fill><patternFill patternType='solid'><fgColor rgb='FFE8EEF3'/><bgColor indexed='64'/></patternFill></fill><fill><patternFill patternType='solid'><fgColor rgb='FFF4F7FA'/><bgColor indexed='64'/></patternFill></fill></fills>
     <borders count='3'><border/><border><left style='thin'><color rgb='FF9EABB7'/></left><right style='thin'><color rgb='FF9EABB7'/></right><top style='thin'><color rgb='FF9EABB7'/></top><bottom style='thin'><color rgb='FF9EABB7'/></bottom></border><border><bottom style='medium'><color rgb='FF174D73'/></bottom></border></borders>
@@ -131,6 +132,12 @@ namespace ReportingModule.Web
     <cellXfs count='15'><xf numFmtId='0' fontId='0' fillId='0' borderId='0' xfId='0'/><xf numFmtId='14' fontId='0' fillId='0' borderId='0' xfId='0' applyNumberFormat='1'/><xf numFmtId='164' fontId='0' fillId='0' borderId='0' xfId='0' applyNumberFormat='1'/><xf numFmtId='165' fontId='0' fillId='0' borderId='0' xfId='0' applyNumberFormat='1'/>
     <xf numFmtId='0' fontId='1' fillId='0' borderId='2' xfId='0' applyFont='1' applyBorder='1' applyAlignment='1'><alignment vertical='center'/></xf><xf numFmtId='0' fontId='2' fillId='0' borderId='0' xfId='0' applyFont='1' applyAlignment='1'><alignment horizontal='center' vertical='center'/></xf><xf numFmtId='0' fontId='3' fillId='3' borderId='1' xfId='0' applyFont='1' applyFill='1' applyBorder='1'/><xf numFmtId='0' fontId='0' fillId='0' borderId='1' xfId='0' applyBorder='1' applyAlignment='1'><alignment wrapText='1' vertical='center'/></xf><xf numFmtId='0' fontId='3' fillId='2' borderId='1' xfId='0' applyFont='1' applyFill='1' applyBorder='1' applyAlignment='1'><alignment horizontal='center' vertical='center' wrapText='1'/></xf><xf numFmtId='0' fontId='0' fillId='0' borderId='1' xfId='0' applyBorder='1' applyAlignment='1'><alignment horizontal='center' vertical='center'/></xf><xf numFmtId='165' fontId='0' fillId='0' borderId='1' xfId='0' applyNumberFormat='1' applyBorder='1' applyAlignment='1'><alignment horizontal='right' vertical='center'/></xf><xf numFmtId='164' fontId='0' fillId='0' borderId='1' xfId='0' applyNumberFormat='1' applyBorder='1' applyAlignment='1'><alignment horizontal='right' vertical='center'/></xf><xf numFmtId='0' fontId='3' fillId='2' borderId='1' xfId='0' applyFont='1' applyFill='1' applyBorder='1' applyAlignment='1'><alignment horizontal='right'/></xf><xf numFmtId='164' fontId='3' fillId='2' borderId='1' xfId='0' applyFont='1' applyFill='1' applyNumberFormat='1' applyBorder='1' applyAlignment='1'><alignment horizontal='right'/></xf><xf numFmtId='0' fontId='3' fillId='0' borderId='0' xfId='0' applyFont='1' applyAlignment='1'><alignment horizontal='center' vertical='center'/></xf></cellXfs>
     <cellStyles count='1'><cellStyle name='Normal' xfId='0' builtinId='0'/></cellStyles></styleSheet>");
+   var cellFormats=styles.Root.Element(S+"cellXfs");
+   cellFormats.SetAttributeValue("count",19);
+   cellFormats.Add(new XElement(S+"xf",new XAttribute("numFmtId",166),new XAttribute("fontId",0),new XAttribute("fillId",0),new XAttribute("borderId",1),new XAttribute("xfId",0),new XAttribute("applyNumberFormat",1),new XAttribute("applyBorder",1),new XAttribute("applyAlignment",1),new XElement(S+"alignment",new XAttribute("horizontal","right"),new XAttribute("vertical","center"))));
+   cellFormats.Add(new XElement(S+"xf",new XAttribute("numFmtId",164),new XAttribute("fontId",0),new XAttribute("fillId",0),new XAttribute("borderId",1),new XAttribute("xfId",0),new XAttribute("applyNumberFormat",1),new XAttribute("applyBorder",1),new XAttribute("applyAlignment",1),new XElement(S+"alignment",new XAttribute("horizontal","right"),new XAttribute("vertical","center"))));
+   cellFormats.Add(new XElement(S+"xf",new XAttribute("numFmtId",3),new XAttribute("fontId",0),new XAttribute("fillId",1),new XAttribute("borderId",1),new XAttribute("xfId",0),new XAttribute("applyNumberFormat",1),new XAttribute("applyBorder",1),new XAttribute("applyAlignment",1),new XElement(S+"alignment",new XAttribute("horizontal","right"),new XAttribute("vertical","center"))));
+   cellFormats.Add(new XElement(S+"xf",new XAttribute("numFmtId",3),new XAttribute("fontId",3),new XAttribute("fillId",2),new XAttribute("borderId",1),new XAttribute("xfId",0),new XAttribute("applyFont",1),new XAttribute("applyFill",1),new XAttribute("applyNumberFormat",1),new XAttribute("applyBorder",1),new XAttribute("applyAlignment",1),new XElement(S+"alignment",new XAttribute("horizontal","right"),new XAttribute("vertical","center"))));
    using(var memory=new MemoryStream()) {
     using(var zip=new ZipArchive(memory,ZipArchiveMode.Create,true)){
      XNamespace ct="http://schemas.openxmlformats.org/package/2006/content-types", rel="http://schemas.openxmlformats.org/package/2006/relationships";

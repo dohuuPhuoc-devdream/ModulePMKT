@@ -14,7 +14,7 @@ class Phase3Checks
  static string[] Row(CatalogDefinition d,string id,string name)
  {
   if(d.Id=="items") return new[]{id,name,"Cái","123.4567","456.7890"};
-  if(d.Id=="units") return new[]{id,name,"2026-01-01"};
+  if(d.Id=="units") return new[]{id,name,"2026-01-01","","","","","",""};
   return new[]{id,name,"","Địa chỉ thử nghiệm",""};
  }
  static string[] Strings(object[] row) { return row.Select(CatalogDefinition.Text).ToArray(); }
@@ -70,6 +70,8 @@ class Phase3Checks
    Check(fk,"referenced HANG001 delete blocked");
    var units=CatalogDefinition.Get("units"); var unit=store.Find(units,"DVDEMO"); var change=Strings(unit); change[2]="2027-01-01";
    Reject(()=>store.Update(units,change,unit),"unit opening date protected after opening balances");
+   Check(units.Validate(new[]{"TAX10","Tax test","2026-01-01","","","0101234565","","",""}).Length==9,"valid 10 digit tax ID accepted");
+   Reject(()=>units.Validate(new[]{"TAXBAD","Tax test","2026-01-01","","","0101234566","","",""}),"invalid tax ID check digit rejected");
    Reject(()=>items.Validate(new[]{"NEG","Name","Cái","-1","0"}),"negative price");
    Reject(()=>items.Validate(new[]{"PREC","Name","Cái","1.12345","0"}),"excess decimal precision");
    Reject(()=>items.Validate(new[]{"MAX","Name","Cái","1000000000000000","0"}),"decimal overflow");

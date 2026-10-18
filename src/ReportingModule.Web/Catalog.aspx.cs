@@ -66,7 +66,7 @@ namespace ReportingModule.Web
     if(field.Kind=="decimal") input.Attributes["inputmode"]="decimal";
     group.Controls.Add(input); inputs.Add(input);
    }
-   var help=new HtmlGenericControl("p"); help.Attributes["class"]="muted"; help.InnerText="* Bắt buộc. Giá dùng dấu chấm thập phân, tối đa 4 chữ số lẻ. Mã không đổi khi sửa."; editor.Controls.Add(help);
+   var help=new HtmlGenericControl("p"); help.Attributes["class"]="muted"; help.InnerText=definition.Id=="units"?"* Bắt buộc. Thông tin pháp lý để trống nếu chưa có dữ liệu xác thực.":"* Bắt buộc. Giá dùng dấu phẩy thập phân; mã không đổi khi sửa."; editor.Controls.Add(help);
    AddButton(editor,"Save","Lưu",()=> {
     var values=inputs.Select(t=>t.Text).ToArray();
     if(Original==null) store.Create(definition,values); else store.Update(definition,values,Original);

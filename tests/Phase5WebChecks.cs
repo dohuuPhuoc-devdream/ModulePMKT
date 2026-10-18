@@ -151,7 +151,7 @@ class Phase5WebChecks
    query="screen=unknown"; Check(Request().Status==404,"unknown route rejected");
   } finally {
    using(var db=new System.Data.SqlClient.SqlConnection(cs)) { db.Open(); using(var cmd=db.CreateCommand()) {
-    cmd.CommandText="SET QUOTED_IDENTIFIER ON; SET ARITHABORT ON; UPDATE dbo.ChungTuThuongMai SET ChungTuNhapMuaId=NULL WHERE MaDonVi IN(@u,@x); DELETE d FROM dbo.CTChungTuKho d JOIN dbo.ChungTuKho h ON h.ChungTuKhoId=d.ChungTuKhoId WHERE h.MaDonVi IN(@u,@x); DELETE dbo.ChungTuKho WHERE MaDonVi IN(@u,@x); DELETE d FROM dbo.CTChungTuThuongMai d JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=d.ChungTuId WHERE h.MaDonVi IN(@u,@x); DELETE dbo.ChungTuThuongMai WHERE MaDonVi IN(@u,@x); DELETE dbo.DonVi WHERE MaDonVi IN(@u,@x);";
+    cmd.CommandText="SET QUOTED_IDENTIFIER ON; SET ARITHABORT ON; UPDATE dbo.ChungTuThuongMai SET ChungTuNhapMuaId=NULL WHERE MaDonVi IN(@u,@x); DELETE d FROM dbo.CTChungTuKho d JOIN dbo.ChungTuKho h ON h.ChungTuKhoId=d.ChungTuKhoId WHERE h.MaDonVi IN(@u,@x); DELETE dbo.ChungTuKho WHERE MaDonVi IN(@u,@x); DELETE d FROM dbo.CTChungTuThuongMai d JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=d.ChungTuId WHERE h.MaDonVi IN(@u,@x); DELETE dbo.ChungTuThuongMai WHERE MaDonVi IN(@u,@x); DELETE dbo.Kho WHERE MaDonVi IN(@u,@x); DELETE dbo.DonVi WHERE MaDonVi IN(@u,@x);";
     cmd.Parameters.AddWithValue("@u",unit);cmd.Parameters.AddWithValue("@x",alternateUnit); cmd.ExecuteNonQuery();
    } }
   }

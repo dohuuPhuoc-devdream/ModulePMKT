@@ -36,6 +36,7 @@ class Phase10Checks
   {
    admin.SaveUser(null,TestUsername,"Tài khoản kiểm thử",true,testPassword,new[]{"User"},new[]{"DVDEMO"},Admin);
    using(var c=new SqlConnection(cs))using(var cmd=new SqlCommand("SELECT UserId FROM dbo.AppUser WHERE NormalizedUsername=@n",c)){cmd.Parameters.Add("@n",SqlDbType.NVarChar,64).Value=IdentityStore.NormalizeUsername(TestUsername);c.Open();userId=(Guid)cmd.ExecuteScalar();}
+   Check(admin.DefaultUnit(userId)=="DVDEMO","single assigned unit is saved as the default");
    var login=IdentityStore.Authenticate(TestUsername.ToLowerInvariant(),testPassword);
    Check(login.User!=null&&login.User.Id==userId,"normalized username authenticates");
    Check(IdentityStore.Get(userId).MustChangePassword,"newly provisioned account is required to change its initial password");

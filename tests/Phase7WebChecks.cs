@@ -119,7 +119,7 @@ class Phase7WebChecks
    query="screen=unknown"; Check(Request().Status==404,"unknown route rejected");
   } finally {
    using(var db=new System.Data.SqlClient.SqlConnection(cs)) { db.Open(); using(var cmd=db.CreateCommand()) {
-    cmd.CommandText="SET QUOTED_IDENTIFIER ON; SET ARITHABORT ON; DELETE d FROM dbo.CTPhieuKeToan d JOIN dbo.PhieuKeToan h ON h.PhieuId=d.PhieuId WHERE h.MaDonVi=@u; DELETE dbo.PhieuKeToan WHERE MaDonVi=@u; DELETE dbo.DonVi WHERE MaDonVi=@u;";
+    cmd.CommandText="SET QUOTED_IDENTIFIER ON; SET ARITHABORT ON; DELETE d FROM dbo.CTPhieuKeToan d JOIN dbo.PhieuKeToan h ON h.PhieuId=d.PhieuId WHERE h.MaDonVi=@u; DELETE dbo.PhieuKeToan WHERE MaDonVi=@u; DELETE dbo.Kho WHERE MaDonVi=@u; DELETE dbo.DonVi WHERE MaDonVi=@u;";
     cmd.Parameters.AddWithValue("@u",unit); cmd.ExecuteNonQuery();
    } }
   }

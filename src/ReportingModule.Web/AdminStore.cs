@@ -32,13 +32,20 @@ namespace ReportingModule.Web
   {using(var c=Open())using(var cmd=new SqlCommand("SELECT r.RoleCode FROM dbo.AppUserRole ur JOIN dbo.AppRole r ON r.RoleId=ur.RoleId WHERE ur.UserId=@id",c)){cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;var list=new List<string>();using(var r=cmd.ExecuteReader())while(r.Read())list.Add(r.GetString(0));return list.ToArray();}}
   public string[] UserUnits(Guid id)
   {using(var c=Open())using(var cmd=new SqlCommand("SELECT MaDonVi FROM dbo.AppUserUnit WHERE UserId=@id",c)){cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;var list=new List<string>();using(var r=cmd.ExecuteReader())while(r.Read())list.Add(r.GetString(0));return list.ToArray();}}
+  public string DefaultUnit(Guid id)
+  {using(var c=Open())using(var cmd=new SqlCommand("SELECT MaDonVi FROM dbo.AppUserUnit WHERE UserId=@id AND IsDefault=1",c)){cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=id;return Convert.ToString(cmd.ExecuteScalar());}}
   public DataTable Units()
   {using(var c=Open())using(var cmd=new SqlCommand("SELECT MaDonVi,TenDonVi FROM dbo.DonVi ORDER BY MaDonVi",c)){var t=new DataTable();using(var a=new SqlDataAdapter(cmd))a.Fill(t);return t;}}
   public void SaveUser(Guid? id,string username,string displayName,bool enabled,string password,string[] roles,string[] units,Guid actor)
+  { SaveUser(id,username,displayName,enabled,password,roles,units,null,actor); }
+  public void SaveUser(Guid? id,string username,string displayName,bool enabled,string password,string[] roles,string[] units,string defaultUnit,Guid actor)
   {
    username=(username??"").Trim();string normalized=IdentityStore.NormalizeUsername(username);displayName=(displayName??"").Trim();
    if(displayName.Length<1||displayName.Length>120)throw new ArgumentException("Tên hiển thị là bắt buộc, tối đa 120 ký tự.");
    roles=(roles??new string[0]).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();units=(units??new string[0]).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+   if(units.Length==1)defaultUnit=units[0];
+   if(!string.IsNullOrEmpty(defaultUnit)&&!units.Contains(defaultUnit,StringComparer.OrdinalIgnoreCase))throw new ArgumentException("Đơn vị mặc định phải nằm trong danh sách được phép truy cập.");
+   if(units.Length>0&&string.IsNullOrEmpty(defaultUnit))defaultUnit=units[0];
    if(roles.Length==0)throw new ArgumentException("Chọn ít nhất một vai trò.");
    byte[] salt=null,hash=null;if(!string.IsNullOrEmpty(password)){salt=PasswordHash.NewSalt();hash=PasswordHash.Create(password,salt);}if(!id.HasValue&&hash==null)throw new ArgumentException("Mật khẩu ban đầu phải có từ 12 ký tự.");
    using(var c=Open())using(var tx=c.BeginTransaction(IsolationLevel.Serializable))
@@ -78,7 +85,7 @@ namespace ReportingModule.Web
      {cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=userId;cmd.Parameters.Add("@n",SqlDbType.NVarChar,64).Value=username;cmd.Parameters.Add("@norm",SqlDbType.NVarChar,64).Value=normalized;AddHash(cmd,hash,salt,userId);cmd.Parameters.Add("@d",SqlDbType.NVarChar,120).Value=displayName;cmd.Parameters.Add("@enabled",SqlDbType.Bit).Value=enabled;cmd.Parameters.Add("@actor",SqlDbType.UniqueIdentifier).Value=actor;cmd.ExecuteNonQuery();}
     }
     foreach(string code in roles)using(var cmd=new SqlCommand("INSERT dbo.AppUserRole(UserId,RoleId,AssignedBy) SELECT @u,RoleId,@actor FROM dbo.AppRole WHERE RoleCode=@role AND IsEnabled=1",c,tx)){cmd.Parameters.Add("@u",SqlDbType.UniqueIdentifier).Value=userId;cmd.Parameters.Add("@actor",SqlDbType.UniqueIdentifier).Value=actor;cmd.Parameters.Add("@role",SqlDbType.VarChar,40).Value=code;if(cmd.ExecuteNonQuery()!=1)throw new ArgumentException("Vai trò không hợp lệ hoặc đã khóa.");}
-    foreach(string code in units)using(var cmd=new SqlCommand("INSERT dbo.AppUserUnit(UserId,MaDonVi,AssignedBy) SELECT @u,MaDonVi,@actor FROM dbo.DonVi WHERE MaDonVi=@unit",c,tx)){cmd.Parameters.Add("@u",SqlDbType.UniqueIdentifier).Value=userId;cmd.Parameters.Add("@actor",SqlDbType.UniqueIdentifier).Value=actor;cmd.Parameters.Add("@unit",SqlDbType.VarChar,20).Value=code;if(cmd.ExecuteNonQuery()!=1)throw new ArgumentException("Đơn vị không hợp lệ.");}
+    foreach(string code in units)using(var cmd=new SqlCommand("INSERT dbo.AppUserUnit(UserId,MaDonVi,AssignedBy,IsDefault) SELECT @u,MaDonVi,@actor,CASE WHEN MaDonVi=@default THEN 1 ELSE 0 END FROM dbo.DonVi WHERE MaDonVi=@unit",c,tx)){cmd.Parameters.Add("@u",SqlDbType.UniqueIdentifier).Value=userId;cmd.Parameters.Add("@actor",SqlDbType.UniqueIdentifier).Value=actor;cmd.Parameters.Add("@default",SqlDbType.VarChar,20).Value=(object)defaultUnit??DBNull.Value;cmd.Parameters.Add("@unit",SqlDbType.VarChar,20).Value=code;if(cmd.ExecuteNonQuery()!=1)throw new ArgumentException("Đơn vị không hợp lệ.");}
     using(var cmd=new SqlCommand(@"SELECT COUNT(*) FROM dbo.AppUserRole targetRole JOIN dbo.AppRole tr ON tr.RoleId=targetRole.RoleId AND tr.IsEnabled=1
       JOIN dbo.AppRolePermission tp ON tp.RoleId=tr.RoleId WHERE targetRole.UserId=@target AND NOT EXISTS(
        SELECT 1 FROM dbo.AppUserRole actorRole JOIN dbo.AppRole ar ON ar.RoleId=actorRole.RoleId AND ar.IsEnabled=1

@@ -26,13 +26,14 @@ namespace ReportingModule.Web
      ListItem[] units=UnitAccess.Items(id.Value).ToArray();
      string current=Convert.ToString(Page.Session["CurrentUnit"]);
      if(!units.Any(x=>string.Equals(x.Value,current,StringComparison.OrdinalIgnoreCase)))
-     { current=units.FirstOrDefault()==null?"":units[0].Value; Page.Session["CurrentUnit"]=current; }
+     { current=UnitAccess.PreferredUnit(id.Value);Page.Session["CurrentUnit"]=current; }
      IdentityPanel.Controls.Add(new Literal { Text="<span class=\"identity-panel\"><span class=\"identity-name\">"+HttpUtility.HtmlEncode(who.DisplayName)+" / "+HttpUtility.HtmlEncode(who.Username)+"</span><span class=\"identity-role\">"+HttpUtility.HtmlEncode(string.Join(", ",who.Roles))+"</span><span class=\"identity-unit\">Đơn vị:</span>" });
      workingUnit=new DropDownList { ID="WorkingUnit",CssClass="working-unit-picker",AutoPostBack=true,CausesValidation=false };
      workingUnit.Attributes["aria-label"]="Đơn vị làm việc";
      foreach(ListItem item in units) workingUnit.Items.Add(new ListItem(item.Text+" ("+item.Value+")",item.Value));
      if(workingUnit.Items.FindByValue(current)!=null) workingUnit.SelectedValue=current;
      workingUnit.Visible=units.Length>1;
+     workingUnit.Visible=workingUnit.Visible&&!string.Equals(VirtualPathUtility.GetFileName(Page.AppRelativeVirtualPath),"Output.aspx",StringComparison.OrdinalIgnoreCase);
      workingUnit.SelectedIndexChanged+=ChangeWorkingUnit;
      IdentityPanel.Controls.Add(workingUnit);
      workingUnitLabel=new Literal { Text=HttpUtility.HtmlEncode(current) };

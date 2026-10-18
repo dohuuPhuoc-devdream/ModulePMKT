@@ -23,6 +23,7 @@ a.catalog-button{text-decoration:none;display:inline-block}
 
 /* Voucher print sheet follows the compact printed document style used by accounting systems. */
 .voucher-print{page:voucher;background:#fff;color:#1b2733;max-width:1120px;margin:18px auto;padding:34px 42px;border:1px solid #cbd5df}
+.purchase-voucher{font-family:"Times New Roman",serif;color:#111;max-width:none;padding:24px 30px}.purchase-voucher .voucher-brand strong,.purchase-voucher .voucher-brand span{display:block}.purchase-voucher h1{font-family:"Times New Roman",serif;font-size:20pt}.purchase-voucher .voucher-date{text-align:center}.purchase-voucher .voucher-meta{display:block;margin:12px 0}.purchase-voucher .voucher-meta>div{display:grid;grid-template-columns:145px 1fr;margin:3px 0}.purchase-voucher .voucher-meta b{font-weight:normal}.purchase-voucher .voucher-lines{width:100%;border-collapse:collapse;table-layout:auto}.purchase-voucher .voucher-lines th{background:#edf4fb}.purchase-voucher .voucher-lines th,.purchase-voucher .voucher-lines td{border:1px solid #333;padding:5px 6px}.purchase-voucher .voucher-lines td:nth-child(2),.purchase-voucher .voucher-lines td:nth-child(3){white-space:nowrap;text-align:left}.purchase-voucher .voucher-blank td{height:25px;border-top:1px dotted #555;border-bottom:1px dotted #555}.purchase-voucher .voucher-total-row{font-weight:bold}.purchase-voucher .voucher-total-row td:first-child{text-align:right}.purchase-voucher .voucher-words{margin-top:12px}.purchase-voucher .voucher-sign-date{text-align:right;margin:24px 0 8px}.purchase-voucher .voucher-signatures{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;margin-top:28px}.purchase-voucher .voucher-signatures div{min-height:80px}.purchase-voucher .voucher-signatures span{display:block;margin-top:6px}
 .voucher-brand{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #174d73;padding-bottom:10px;color:#174d73}
 .voucher-brand strong{font-size:18px}.voucher-brand span{font-size:12px;color:#536477}.voucher-date{text-align:center;margin:0 0 14px}
 .voucher-print h1{text-align:center;font-size:22px;margin:22px 0 18px;text-transform:uppercase}
@@ -34,7 +35,7 @@ a.catalog-button{text-decoration:none;display:inline-block}
 .voucher-signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:40px 0 24px;text-align:center}
 .voucher-signatures div{min-height:90px}.voucher-signatures span{display:block;font-size:12px;color:#536477;margin-top:5px}
 @page voucher{size:A4 portrait;margin:12mm}
-@media print{.voucher-print{max-width:none;margin:0;padding:0;border:0}.voucher-print h1{break-after:avoid}.voucher-lines tr{break-inside:avoid}}
+@media print{.voucher-print{max-width:none;margin:0;padding:0;border:0}.voucher-print h1{break-after:avoid}.voucher-lines tr{break-inside:avoid}.purchase-voucher{font-family:"Times New Roman",serif}.purchase-voucher .voucher-lines th{position:static}}
 
 /* Phase 10: identity and administration share the existing compact ERP language. */
 .app-header{gap:18px}.environment{margin-left:auto;white-space:nowrap}

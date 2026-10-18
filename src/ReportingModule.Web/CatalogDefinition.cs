@@ -36,12 +36,17 @@ namespace ReportingModule.Web
      F("MaNCC","Mã nhà cung cấp",20),F("TenNCC","Tên nhà cung cấp",200),F("MaSoThue","Mã số thuế",20,false),
      F("DiaChi","Địa chỉ",300,false),F("DienThoai","Điện thoại",30,false));
     case "units": return new CatalogDefinition(id,"DonVi","Danh mục đơn vị cơ sở",
-     F("MaDonVi","Mã đơn vị",20),F("TenDonVi","Tên đơn vị",200),new CatalogField("NgayBatDau","Ngày bắt đầu","date",10,true));
+     F("MaDonVi","Mã đơn vị",20),F("TenDonVi","Tên đơn vị",200),new CatalogField("NgayBatDau","Ngày bắt đầu","date",10,true),
+     F("TenPhapLy","Tên pháp lý",300,false),F("DiaChi","Địa chỉ",300,false),F("MaSoThue","Mã số thuế",20,false),
+     F("NguoiDaiDien","Người đại diện",120,false),F("DienThoai","Điện thoại",30,false),F("Email","Email",254,false));
     default: throw new ArgumentException("Danh mục không hợp lệ.");
    }
   }
   public object[] Validate(string[] values)
   {
+   // Keep the original three-column unit create/update contract working for existing callers;
+   // newly exported templates include the optional legal profile columns.
+   if(Id=="units"&&values!=null&&values.Length==3) values=values.Concat(new string[6]).ToArray();
    if(values==null || values.Length!=Fields.Length) throw new ArgumentException("Số cột không đúng.");
    var result=new object[Fields.Length];
    for(int i=0;i<Fields.Length;i++)
@@ -68,10 +73,19 @@ namespace ReportingModule.Web
      if(v.Length>f.Length || v.Any(char.IsControl)) throw new ArgumentException(f.Label+": quá dài hoặc chứa ký tự điều khiển.");
      if(i==0 && !Regex.IsMatch(v,@"\A[A-Za-z0-9_-]+\z")) throw new ArgumentException(f.Label+": chỉ dùng chữ không dấu, số, _ hoặc -.");
      if((f.Name=="MaSoThue"||f.Name=="DienThoai") && v.Any(c=>c>127)) throw new ArgumentException(f.Label+": chỉ dùng ký tự ASCII.");
+     if(f.Name=="MaSoThue" && !ValidTaxCode(v)) throw new ArgumentException("Mã số thuế phải gồm 10 hoặc 13 chữ số và có chữ số kiểm tra hợp lệ.");
+     if(f.Name=="Email" && !Regex.IsMatch(v,@"\A[^\s@]+@[^\s@]+\.[^\s@]+\z",RegexOptions.CultureInvariant)) throw new ArgumentException("Email không đúng định dạng.");
      result[i]=v;
     }
    }
    return result;
+  }
+  private static bool ValidTaxCode(string value)
+  {
+   if(!Regex.IsMatch(value,@"\A(?:\d{10}|\d{13})\z",RegexOptions.CultureInvariant)) return false;
+   int[] weights={31,29,23,19,17,13,7,5,3}; int sum=0;
+   for(int i=0;i<weights.Length;i++) sum+=(value[i]-'0')*weights[i];
+   return (10-(sum%11))%10==value[9]-'0';
   }
   public static string Text(object value)
   {

@@ -14,7 +14,7 @@ namespace ReportingModule.Web
   protected override void OnInit(EventArgs e)
   {
    base.OnInit(e);screen=Request.QueryString["screen"];if(!new[]{"admin-users","admin-roles","admin-audit"}.Contains(screen))throw new HttpException(404,"Chức năng không tồn tại.");
-   RequirePermission(PermissionMap.View(screen));store=new AdminStore();string module;var node=Navigation.Find(screen,out module);Title=node.Title+" | PicoCorp Accounting";
+   RequirePermission(PermissionMap.View(screen));store=new AdminStore();string module;var node=Navigation.Find(screen,out module);Title=node.Title+" | "+AppIdentity.ProductName;
    var crumb=new HtmlGenericControl("p");crumb.Attributes["class"]="breadcrumb";crumb.InnerText="Hệ thống / Quản trị";Root.Controls.Add(crumb);
    var h=new HtmlGenericControl("h1");h.InnerText=node.Title;Root.Controls.Add(h);
    var toolbar=new Panel{CssClass="context-toolbar"};Root.Controls.Add(toolbar);
@@ -58,8 +58,14 @@ namespace ReportingModule.Web
    var units=new CheckBoxList{ID="Units",RepeatLayout=RepeatLayout.Flow,RepeatDirection=RepeatDirection.Horizontal,CssClass="admin-check-list"};
    units.DataSource=store.Units();units.DataTextField="TenDonVi";units.DataValueField="MaDonVi";units.DataBind();var currentUnits=SelectedUser.HasValue?store.UserUnits(SelectedUser.Value):new string[0];foreach(ListItem item in units.Items)item.Selected=currentUnits.Contains(item.Value,StringComparer.OrdinalIgnoreCase);
    panel.Controls.Add(new Literal{Text="<h3>Đơn vị được phép truy cập</h3>"});panel.Controls.Add(units);
+   var defaultUnit=new DropDownList{ID="DefaultUnit",CssClass="admin-default-unit"};defaultUnit.Items.Add(new ListItem("Chọn đơn vị mặc định", ""));
+   foreach(ListItem item in units.Items)defaultUnit.Items.Add(new ListItem(item.Text+" ("+item.Value+")",item.Value));
+   string savedDefault=SelectedUser.HasValue?store.DefaultUnit(SelectedUser.Value):"";
+   if(!string.IsNullOrEmpty(savedDefault)&&defaultUnit.Items.FindByValue(savedDefault)!=null)defaultUnit.SelectedValue=savedDefault;
+   else if(currentUnits.Length==1&&defaultUnit.Items.FindByValue(currentUnits[0])!=null)defaultUnit.SelectedValue=currentUnits[0];
+   var defaultGroup=new Panel{CssClass="catalog-field"};defaultGroup.Controls.Add(new Label{Text="Đơn vị mặc định khi đăng nhập",AssociatedControlID=defaultUnit.ID});defaultGroup.Controls.Add(defaultUnit);panel.Controls.Add(defaultGroup);
    panel.Controls.Add(new Literal{Text="<p class=\"muted\">Tài khoản không bị xóa để giữ nguyên tham chiếu nhật ký. Mật khẩu không được đọc lại.</p>"});
-   AddButton(panel,"SaveUser","Lưu người dùng",()=>{store.SaveUser(SelectedUser,username.Text,display.Text,enabled.Checked,password.Text,roles.Items.Cast<ListItem>().Where(x=>x.Selected).Select(x=>x.Value).ToArray(),units.Items.Cast<ListItem>().Where(x=>x.Selected).Select(x=>x.Value).ToArray(),UserId);password.Text="";message.Text="Đã lưu người dùng.";},AdminPermission);
+   AddButton(panel,"SaveUser","Lưu người dùng",()=>{var allowed=units.Items.Cast<ListItem>().Where(x=>x.Selected).Select(x=>x.Value).ToArray();store.SaveUser(SelectedUser,username.Text,display.Text,enabled.Checked,password.Text,roles.Items.Cast<ListItem>().Where(x=>x.Selected).Select(x=>x.Value).ToArray(),allowed,defaultUnit.SelectedValue,UserId);password.Text="";message.Text="Đã lưu người dùng.";},AdminPermission);
    if(SelectedUser.HasValue)AddButton(panel,"UnlockUser","Mở khóa đăng nhập",()=>{store.Unlock(SelectedUser.Value,UserId);message.Text="Đã mở khóa tài khoản.";;},AdminPermission);
   }
   private static TextBox Field(Control parent,string label,string value,string id)

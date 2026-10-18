@@ -66,7 +66,7 @@ class Phase5Checks
    stock.Save(null,null,u2,"N","OTHER-UNIT",day.AddDays(3),"",Lines(1),true,"NCCDEMO001",true);
    Check(c.PurchaseReceipts(u,"NCCDEMO002").Rows.Count==1&&c.PurchaseReceipts(u2,"NCCDEMO001").Rows.Count==1,"purchase receipt choices honor supplier and selected unit");
   } finally {
-   SQL("UPDATE dbo.ChungTuThuongMai SET ChungTuNhapMuaId=NULL WHERE MaDonVi=@u; DELETE d FROM dbo.CTChungTuKho d JOIN dbo.ChungTuKho h ON h.ChungTuKhoId=d.ChungTuKhoId WHERE h.MaDonVi IN(@u,@u+'B'); DELETE dbo.ChungTuKho WHERE MaDonVi IN(@u,@u+'B'); DELETE d FROM dbo.CTChungTuThuongMai d JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=d.ChungTuId WHERE h.MaDonVi IN(@u,@u+'B'); DELETE dbo.ChungTuThuongMai WHERE MaDonVi IN(@u,@u+'B'); DELETE dbo.TonDauKy WHERE MaDonVi IN(@u,@u+'B'); DELETE dbo.DonVi WHERE MaDonVi IN(@u,@u+'B'); DELETE dbo.HangHoa WHERE MaHang=@i;");
+   SQL("UPDATE dbo.ChungTuThuongMai SET ChungTuNhapMuaId=NULL WHERE MaDonVi=@u; DELETE d FROM dbo.CTChungTuKho d JOIN dbo.ChungTuKho h ON h.ChungTuKhoId=d.ChungTuKhoId WHERE h.MaDonVi IN(@u,@u+'B'); DELETE dbo.ChungTuKho WHERE MaDonVi IN(@u,@u+'B'); DELETE d FROM dbo.CTChungTuThuongMai d JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=d.ChungTuId WHERE h.MaDonVi IN(@u,@u+'B'); DELETE dbo.ChungTuThuongMai WHERE MaDonVi IN(@u,@u+'B'); DELETE dbo.TonDauKy WHERE MaDonVi IN(@u,@u+'B'); DELETE dbo.Kho WHERE MaDonVi IN(@u,@u+'B'); DELETE dbo.DonVi WHERE MaDonVi IN(@u,@u+'B'); DELETE dbo.HangHoa WHERE MaHang=@i;");
   }
   Console.WriteLine("PHASE 5 SERVICE CHECKS PASSED; isolated fixtures removed.");
  }

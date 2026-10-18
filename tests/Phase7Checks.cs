@@ -58,7 +58,7 @@ class Phase7Checks
    Save("CONTRA",5,new[]{new JournalLine("NV_VON",200,0),new JournalLine("TS_TIEN",0,200)});
    Check(Value("TS_TIEN","CuoiKy")<0&&Value("CHECK","CuoiKy")==0,"opposite-side balance retains sign without hiding mismatch");
    Check((decimal)new StockStore(cs).Report("DVDEMO",day,day.AddYears(1),"HANG001","T").Rows[0]["TonCuoi"]==130,"journals do not alter stock");
-  } finally { SQL("DELETE d FROM dbo.CTPhieuKeToan d JOIN dbo.PhieuKeToan h ON h.PhieuId=d.PhieuId WHERE h.MaDonVi=@u; DELETE dbo.PhieuKeToan WHERE MaDonVi=@u; DELETE dbo.DonVi WHERE MaDonVi=@u;"); }
+  } finally { SQL("DELETE d FROM dbo.CTPhieuKeToan d JOIN dbo.PhieuKeToan h ON h.PhieuId=d.PhieuId WHERE h.MaDonVi=@u; DELETE dbo.PhieuKeToan WHERE MaDonVi=@u; DELETE dbo.Kho WHERE MaDonVi=@u; DELETE dbo.DonVi WHERE MaDonVi=@u;"); }
   Console.WriteLine("PHASE 7 SERVICE CHECKS PASSED; fixtures removed.");
  }
 }

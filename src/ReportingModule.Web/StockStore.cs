@@ -38,6 +38,7 @@ namespace ReportingModule.Web
   public DataTable Units() { var current=UnitAccess.CurrentTable();return current??Query("SELECT MaDonVi,TenDonVi,NgayBatDau FROM dbo.DonVi ORDER BY MaDonVi"); }
   public DataTable Items() { return Query("SELECT MaHang,TenHang,DonViTinh FROM dbo.HangHoa ORDER BY MaHang"); }
   public DataTable Suppliers() { return Query("SELECT MaNCC,TenNCC FROM dbo.NhaCungCap ORDER BY MaNCC"); }
+  public DataTable Warehouses(string unit) { UnitAccess.Demand(unit); return Query("SELECT MaKho,TenKho FROM dbo.Kho WHERE MaDonVi=@u ORDER BY MaKho",P("@u",SqlDbType.VarChar,unit,20)); }
   public static DateTime Date(string text)
   {
    DateTime result;
@@ -71,7 +72,7 @@ namespace ReportingModule.Web
     catch(OverflowException) { throw new ArgumentException("Thành tiền vượt giới hạn decimal(28,4)."); }
    }
   }
-  public long Save(long? id,byte[] version,string unit,string kind,string number,DateTime date,string note,IList<StockLine> lines,bool post,string supplier=null,bool purchaseReceipt=false)
+  public long Save(long? id,byte[] version,string unit,string kind,string number,DateTime date,string note,IList<StockLine> lines,bool post,string supplier=null,bool purchaseReceipt=false,string warehouse="KHO01",string deliveryPerson=null)
   {
    UnitAccess.Demand(unit);
    ValidateLines(lines);
@@ -80,6 +81,9 @@ namespace ReportingModule.Web
    number=(number??"").Trim();
    if(!Regex.IsMatch(number,@"\A[A-Za-z0-9_/-]{1,30}\z")) throw new ArgumentException("Số phiếu: 1-30 ký tự không dấu, số, _, / hoặc -.");
    if((note??"").Length>500) throw new ArgumentException("Diễn giải tối đa 500 ký tự.");
+   warehouse=(warehouse??"").Trim(); deliveryPerson=(deliveryPerson??"").Trim();
+   if(purchaseReceipt && (warehouse.Length<1||warehouse.Length>20)) throw new ArgumentException("Mã kho bắt buộc, tối đa 20 ký tự.");
+   if(deliveryPerson.Length>120) throw new ArgumentException("Người giao hàng tối đa 120 ký tự.");
    if(id.HasValue && (version==null||version.Length!=8)) throw new ArgumentException("Chọn lại phiếu trước khi sửa.");
    var table=new DataTable(); table.Columns.Add("Dong",typeof(int)); table.Columns.Add("MaHang",typeof(string)); table.Columns.Add("SoLuong",typeof(decimal)); table.Columns.Add("DonGia",typeof(decimal));
    for(int i=0;i<lines.Count;i++) table.Rows.Add(i+1,lines[i].Item,lines[i].Quantity,lines[i].Price);
@@ -88,7 +92,7 @@ namespace ReportingModule.Web
     cmd.CommandType=CommandType.StoredProcedure;
     cmd.Parameters.AddRange(new[]{P("@Id",SqlDbType.BigInt,id.HasValue?(object)id.Value:null),P("@Version",SqlDbType.Binary,version,8),
      P("@Unit",SqlDbType.VarChar,unit,20),P("@Kind",SqlDbType.Char,kind,1),P("@Number",SqlDbType.VarChar,number,30),P("@Date",SqlDbType.Date,date.Date),
-     P("@Note",SqlDbType.NVarChar,note,500),P("@Post",SqlDbType.Bit,post),P("@Supplier",SqlDbType.VarChar,supplier,20),P("@PurchaseReceipt",SqlDbType.Bit,purchaseReceipt)});
+     P("@Note",SqlDbType.NVarChar,note,500),P("@Post",SqlDbType.Bit,post),P("@Supplier",SqlDbType.VarChar,supplier,20),P("@PurchaseReceipt",SqlDbType.Bit,purchaseReceipt),P("@Warehouse",SqlDbType.VarChar,purchaseReceipt?warehouse:null,20),P("@DeliveryPerson",SqlDbType.NVarChar,purchaseReceipt?deliveryPerson:null,120)});
     var p=cmd.Parameters.Add("@Lines",SqlDbType.Structured); p.TypeName="dbo.StockLines"; p.Value=table;
     return Convert.ToInt64(cmd.ExecuteScalar());
    }
@@ -122,7 +126,7 @@ namespace ReportingModule.Web
    using(var c=Open()) using(var tx=c.BeginTransaction(IsolationLevel.RepeatableRead))
    {
     var ds=new DataSet();
-    using(var cmd=new SqlCommand(@"SELECT h.*,u.TenDonVi,ISNULL(n.TenNCC,k.TenKH) AS TenDoiTac,ISNULL(n.DiaChi,k.DiaChi) AS DiaChiDoiTac
+    using(var cmd=new SqlCommand(@"SELECT h.*,u.TenDonVi,u.TenPhapLy,u.DiaChi AS DiaChiDonVi,u.MaSoThue,u.NguoiDaiDien,ISNULL(n.TenNCC,k.TenKH) AS TenDoiTac,ISNULL(n.DiaChi,k.DiaChi) AS DiaChiDoiTac
      FROM dbo.ChungTuKho h JOIN dbo.DonVi u ON u.MaDonVi=h.MaDonVi LEFT JOIN dbo.NhaCungCap n ON n.MaNCC=h.MaNCC
      LEFT JOIN dbo.ChungTuThuongMai tm ON tm.ChungTuId=h.ChungTuThuongMaiId LEFT JOIN dbo.KhachHang k ON k.MaKH=tm.MaKH
      WHERE h.ChungTuKhoId=@id AND h.MaDonVi=@u AND h.Loai=@k;

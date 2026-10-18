@@ -13,6 +13,11 @@ using System.Web.UI.WebControls;
 
 namespace ReportingModule.Web
 {
+ public static class AppIdentity
+ {
+  public static string ProductName { get { return ConfigurationManager.AppSettings["ProductName"]??"Kế toán"; } }
+ }
+
  public sealed class AppUserInfo
  {
   public Guid Id; public string Username,DisplayName; public bool Enabled,MustChangePassword; public DateTime? LockedUntilUtc;
@@ -198,6 +203,13 @@ namespace ReportingModule.Web
 
  public static class UnitAccess
  {
+  public static string PreferredUnit(Guid user)
+  {
+   using(var c=new SqlConnection(ConfigurationManager.ConnectionStrings["ReportingModule"].ConnectionString))using(var cmd=new SqlCommand(@"SELECT TOP(1) a.MaDonVi FROM dbo.AppUserUnit a
+    WHERE a.UserId=@id ORDER BY a.IsDefault DESC,a.MaDonVi",c))
+   {cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=user;c.Open();object value=cmd.ExecuteScalar();if(value!=null&&value!=DBNull.Value)return Convert.ToString(value);}
+   return Items(user).Select(x=>x.Value).FirstOrDefault()??"";
+  }
   public static bool IsAllowed(Guid user,string unit)
   {
    if(string.IsNullOrWhiteSpace(unit))return false;

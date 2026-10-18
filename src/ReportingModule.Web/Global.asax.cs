@@ -17,7 +17,7 @@ namespace ReportingModule.Web
    foreach(string name in Response.Cookies)
    {
     var cookie=Response.Cookies[name];if(cookie==null)continue;
-    if(name==FormsAuthentication.FormsCookieName||name=="PicoCorp.Session"){cookie.HttpOnly=true;cookie.Secure=Request.IsSecureConnection;cookie.SameSite=SameSiteMode.Lax;}
+    if(name==FormsAuthentication.FormsCookieName||name=="ReportingModule.Session"){cookie.HttpOnly=true;cookie.Secure=Request.IsSecureConnection;cookie.SameSite=SameSiteMode.Lax;}
    }
    if(Request.IsSecureConnection&&!Request.IsLocal)Response.Headers["Strict-Transport-Security"]="max-age=31536000";
   }

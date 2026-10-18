@@ -10,7 +10,7 @@
  <a class="skip-link" href="#workspace">Đến nội dung</a>
  <form id="MainForm" runat="server">
   <div class="shell-top">
-  <header class="app-header"><a class="app-name" href="Default.aspx">PicoCorp Accounting <span>/ Nghiệp vụ &amp; báo cáo</span></a><asp:PlaceHolder ID="IdentityPanel" runat="server" /></header>
+  <header class="app-header"><a class="app-name" href="Default.aspx"><%: ReportingModule.Web.AppIdentity.ProductName %> <span>/ Nghiệp vụ &amp; báo cáo</span></a><asp:PlaceHolder ID="IdentityPanel" runat="server" /></header>
   <asp:HiddenField ID="CsrfToken" runat="server" />
    <nav class="main-navigation" aria-label="Phân hệ nghiệp vụ"><ul class="module-list"><%= RenderNavigation() %></ul></nav>
   </div>

@@ -61,7 +61,7 @@ class Phase6Checks
    Check(independent==(decimal)Debt("payables",0,10)["DuCuoi"],"AP independent SQL reconciliation");
    Check((decimal)stock.Report("DVDEMO",day,day.AddYears(1),"HANG001","T").Rows[0]["TonCuoi"]==130,"HANG001 preserved");
   } finally {
-   SQL("DELETE p FROM dbo.ThanhToanHoaDon p JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=p.ChungTuId WHERE h.MaDonVi=@u; UPDATE dbo.ChungTuThuongMai SET ChungTuNhapMuaId=NULL WHERE MaDonVi=@u; DELETE d FROM dbo.CTChungTuKho d JOIN dbo.ChungTuKho h ON h.ChungTuKhoId=d.ChungTuKhoId WHERE h.MaDonVi=@u; DELETE dbo.ChungTuKho WHERE MaDonVi=@u; DELETE d FROM dbo.CTChungTuThuongMai d JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=d.ChungTuId WHERE h.MaDonVi=@u; DELETE dbo.ChungTuThuongMai WHERE MaDonVi=@u; DELETE dbo.TonDauKy WHERE MaDonVi=@u; DELETE dbo.DonVi WHERE MaDonVi=@u; DELETE dbo.HangHoa WHERE MaHang=@i;");
+   SQL("DELETE p FROM dbo.ThanhToanHoaDon p JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=p.ChungTuId WHERE h.MaDonVi=@u; UPDATE dbo.ChungTuThuongMai SET ChungTuNhapMuaId=NULL WHERE MaDonVi=@u; DELETE d FROM dbo.CTChungTuKho d JOIN dbo.ChungTuKho h ON h.ChungTuKhoId=d.ChungTuKhoId WHERE h.MaDonVi=@u; DELETE dbo.ChungTuKho WHERE MaDonVi=@u; DELETE d FROM dbo.CTChungTuThuongMai d JOIN dbo.ChungTuThuongMai h ON h.ChungTuId=d.ChungTuId WHERE h.MaDonVi=@u; DELETE dbo.ChungTuThuongMai WHERE MaDonVi=@u; DELETE dbo.TonDauKy WHERE MaDonVi=@u; DELETE dbo.Kho WHERE MaDonVi=@u; DELETE dbo.DonVi WHERE MaDonVi=@u; DELETE dbo.HangHoa WHERE MaHang=@i;");
   }
   Console.WriteLine("PHASE 6 SERVICE CHECKS PASSED; fixtures removed.");
  }

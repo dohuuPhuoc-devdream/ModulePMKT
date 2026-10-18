@@ -8,7 +8,6 @@ DECLARE @Lock int;
 EXEC @Lock=sys.sp_getapplock @Resource=N'ReportingModule.Schema',@LockMode='Exclusive',@LockOwner='Transaction',@LockTimeout=10000;
 IF @Lock<0 THROW 51700,'Cannot acquire migration lock.',1;
 IF NOT EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version=6) THROW 51700,'Security schema version 6 required.',1;
-IF EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version>8) THROW 51700,'Database is newer than this migration.',1;
 IF COL_LENGTH('dbo.ChungTuKho','MaNCC') IS NULL
  EXEC(N'ALTER TABLE dbo.ChungTuKho ADD MaNCC varchar(20) NULL CONSTRAINT FK_CTK_NCC REFERENCES dbo.NhaCungCap(MaNCC)');
 IF COL_LENGTH('dbo.ChungTuThuongMai','ChungTuNhapMuaId') IS NULL
@@ -29,7 +28,8 @@ CREATE OR ALTER PROCEDURE dbo.SaveStockDocument
  @Unit varchar(20), @Kind char(1), @Number varchar(30), @Date date,
  @Note nvarchar(500)=NULL, @Post bit=0, @Lines dbo.StockLines READONLY,
  @SavedId bigint=NULL OUTPUT, @ReturnResult bit=1,
- @Supplier varchar(20)=NULL, @PurchaseReceipt bit=0
+ @Supplier varchar(20)=NULL, @PurchaseReceipt bit=0,
+ @Warehouse varchar(20)=NULL, @DeliveryPerson nvarchar(120)=NULL
 AS
 BEGIN
  SET NOCOUNT ON; SET XACT_ABORT ON; SET ANSI_WARNINGS ON; SET ARITHABORT ON;
@@ -38,6 +38,8 @@ BEGIN
   OR @PurchaseReceipt IS NULL OR NULLIF(LTRIM(RTRIM(@Number)),'') IS NULL THROW 51701,N'Loại, số phiếu và ngày là bắt buộc.',1;
  IF (@PurchaseReceipt=1 AND (@Kind<>'N' OR NULLIF(LTRIM(RTRIM(@Supplier)),'') IS NULL))
   OR (@PurchaseReceipt=0 AND @Supplier IS NOT NULL) THROW 51702,N'Nhà cung cấp chỉ áp dụng cho phiếu nhập mua hàng.',1;
+ IF (@PurchaseReceipt=1 AND (NULLIF(LTRIM(RTRIM(@Warehouse)),'') IS NULL OR LEN(@DeliveryPerson)>120))
+  OR (@PurchaseReceipt=0 AND (@Warehouse IS NOT NULL OR @DeliveryPerson IS NOT NULL)) THROW 51702,N'Kho hoặc người giao hàng không hợp lệ.',1;
  IF NOT EXISTS(SELECT 1 FROM @Lines) OR (SELECT COUNT(*) FROM @Lines)>100 OR EXISTS(SELECT 1 FROM @Lines WHERE Dong<=0 OR SoLuong<=0 OR DonGia<0)
   THROW 51703,N'Phiếu cần 1-100 dòng; số lượng phải dương và đơn giá không âm.',1;
  BEGIN TRY
@@ -46,16 +48,17 @@ BEGIN
   SELECT @OpeningDate=NgayBatDau FROM dbo.DonVi WITH(XLOCK,HOLDLOCK) WHERE MaDonVi=@Unit;
   IF @OpeningDate IS NULL OR @Date<@OpeningDate THROW 51704,N'Đơn vị không hợp lệ hoặc ngày trước ngày bắt đầu.',1;
   IF @PurchaseReceipt=1 AND NOT EXISTS(SELECT 1 FROM dbo.NhaCungCap WHERE MaNCC=@Supplier) THROW 51705,N'Nhà cung cấp không tồn tại.',1;
+  IF @PurchaseReceipt=1 AND NOT EXISTS(SELECT 1 FROM dbo.Kho WHERE MaDonVi=@Unit AND MaKho=@Warehouse) THROW 51705,N'Kho không thuộc đơn vị đang làm việc.',1;
   IF EXISTS(SELECT 1 FROM @Lines l LEFT JOIN dbo.HangHoa h ON h.MaHang=l.MaHang WHERE h.MaHang IS NULL) THROW 51706,N'Mã hàng không tồn tại.',1;
   IF @Id IS NULL
   BEGIN
-   INSERT dbo.ChungTuKho(MaDonVi,Loai,SoChungTu,Ngay,MaNCC,DienGiai)
-    VALUES(@Unit,@Kind,LTRIM(RTRIM(@Number)),@Date,@Supplier,@Note);
+   INSERT dbo.ChungTuKho(MaDonVi,Loai,SoChungTu,Ngay,MaNCC,DienGiai,MaKho,NguoiGiaoHang)
+    VALUES(@Unit,@Kind,LTRIM(RTRIM(@Number)),@Date,@Supplier,@Note,COALESCE(@Warehouse,'KHO01'),@DeliveryPerson);
    SET @Id=SCOPE_IDENTITY();
   END
   ELSE
   BEGIN
-   UPDATE dbo.ChungTuKho SET SoChungTu=LTRIM(RTRIM(@Number)),Ngay=@Date,MaNCC=@Supplier,DienGiai=@Note
+   UPDATE dbo.ChungTuKho SET SoChungTu=LTRIM(RTRIM(@Number)),Ngay=@Date,MaNCC=@Supplier,DienGiai=@Note,MaKho=COALESCE(@Warehouse,MaKho),NguoiGiaoHang=@DeliveryPerson
     WHERE ChungTuKhoId=@Id AND PhienBan=@Version AND MaDonVi=@Unit AND Loai=@Kind AND TrangThai='DRAFT' AND ChungTuThuongMaiId IS NULL;
    IF @@ROWCOUNT<>1 THROW 51707,N'Phiếu đã thay đổi, đã ghi sổ hoặc không được phép sửa.',1;
    DELETE dbo.CTChungTuKho WHERE ChungTuKhoId=@Id;

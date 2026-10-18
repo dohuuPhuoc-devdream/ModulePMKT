@@ -66,10 +66,11 @@ namespace ReportingModule.Web
   }
   private static byte[] ExportVoucher(OutputSnapshot s)
   {
-   const int w=1240,h=1754,margin=84,bottom=1600; var pages=new List<byte[]>(); float y=0;
-   using(var regular=new Font("Arial",20,FontStyle.Regular,GraphicsUnit.Pixel))
-   using(var bold=new Font("Arial",20,FontStyle.Bold,GraphicsUnit.Pixel))
-   using(var title=new Font("Arial",34,FontStyle.Bold,GraphicsUnit.Pixel))
+   const int w=1754,h=1240,margin=84,bottom=1080; var pages=new List<byte[]>(); float y=0;
+   string face=s.Screen=="purchase-receipt"?"Times New Roman":"Arial";
+   using(var regular=new Font(face,20,FontStyle.Regular,GraphicsUnit.Pixel))
+   using(var bold=new Font(face,20,FontStyle.Bold,GraphicsUnit.Pixel))
+   using(var title=new Font(face,34,FontStyle.Bold,GraphicsUnit.Pixel))
    using(var bitmap=new Bitmap(w,h)) using(var g=Graphics.FromImage(bitmap))
    {
     g.TextRenderingHint=TextRenderingHint.AntiAliasGridFit;
@@ -81,12 +82,14 @@ namespace ReportingModule.Web
     };
     Action start=()=>{
      g.Clear(Color.White);y=margin;
-     g.DrawString("PicoCorp Accounting",bold,Brushes.Black,margin,y);g.DrawString(s.UnitName,regular,Brushes.Black,margin,y+30);y+=68;
+     g.DrawString(s.UnitLegalName??s.UnitName,bold,Brushes.Black,margin,y);y+=30;
+     if(!string.IsNullOrWhiteSpace(s.UnitAddress)){g.DrawString(s.UnitAddress,regular,Brushes.Black,margin,y);y+=26;}
+     if(!string.IsNullOrWhiteSpace(s.UnitTaxCode)){g.DrawString("Mã số thuế: "+s.UnitTaxCode,regular,Brushes.Black,margin,y);y+=26;}
      g.DrawLine(Pens.SteelBlue,margin,y,w-margin,y);y+=20;
      y+=DrawParagraph(g,s.Title.ToUpperInvariant(),title,margin,y,w-2*margin)+8;
-     y+=DrawParagraph(g,"Ngày "+s.DocumentDate.ToString("dd 'tháng' MM 'năm' yyyy",CultureInfo.GetCultureInfo("vi-VN"))+"                         Số chứng từ: "+s.DocumentNumber,bold,margin,y,w-2*margin)+14;
-     y+=DrawParagraph(g,"Đơn vị: "+s.UnitName+" ("+s.UnitCode+")",regular,margin,y,w-2*margin)+7;
-     if(!string.IsNullOrEmpty(s.PartnerCode)) y+=DrawParagraph(g,s.PartnerLabel+": "+s.PartnerName+" ("+s.PartnerCode+")",regular,margin,y,w-2*margin)+7;
+     y+=DrawParagraph(g,"Ngày "+s.DocumentDate.ToString("dd 'tháng' MM 'năm' yyyy",CultureInfo.GetCultureInfo("vi-VN"))+"                         Số "+(s.Screen=="purchase-receipt"?"phiếu":"chứng từ")+": "+s.DocumentNumber,bold,margin,y,w-2*margin)+14;
+     if(s.Screen=="purchase-receipt"&&!string.IsNullOrWhiteSpace(s.DeliveryPerson))y+=DrawParagraph(g,"Người giao hàng: "+s.DeliveryPerson,regular,margin,y,w-2*margin)+7;
+     if(!string.IsNullOrEmpty(s.PartnerCode)) y+=DrawParagraph(g,(s.PartnerLabel??"Đối tác")+": "+s.PartnerName,regular,margin,y,w-2*margin)+7;
      if(!string.IsNullOrEmpty(s.PartnerAddress)) y+=DrawParagraph(g,"Địa chỉ: "+s.PartnerAddress,regular,margin,y,w-2*margin)+7;
      if(!string.IsNullOrEmpty(s.DocumentNote)) y+=DrawParagraph(g,"Diễn giải: "+s.DocumentNote,regular,margin,y,w-2*margin)+10;
      headers();
@@ -100,13 +103,15 @@ namespace ReportingModule.Web
       float x=margin;g.DrawRectangle(Pens.LightGray,x,y,64,height);g.DrawString((++rowNumber).ToString(CultureInfo.InvariantCulture),regular,Brushes.Black,new RectangleF(x+6,y+8,52,height-12));x+=64;
       for(int i=0;i<cells.Length;i++){g.DrawRectangle(Pens.LightGray,x,y,widths[i],height);using(var f=new StringFormat()){if(s.Columns[i].Format.Contains(":N"))f.Alignment=StringAlignment.Far;g.DrawString(cells[i],regular,Brushes.Black,new RectangleF(x+8,y+8,widths[i]-16,height-12),f);}x+=widths[i];}y+=height;
     }
-    if(!string.IsNullOrEmpty(s.DocumentTotal)){y+=20;g.DrawString(s.DocumentTotalLabel??"Tổng cộng",bold,Brushes.Black,w-margin-390,y);g.DrawString(s.DocumentTotal,bold,Brushes.Black,w-margin-180,y);y+=50;}
+    if(s.Screen=="purchase-receipt"&&rowNumber<10){float[] blankWidths=s.Columns.Select(c=>c.Format==""?1.5f:1f).ToArray();float blankSum=blankWidths.Sum();for(int i=blankWidths.Length-1;i>=0;i--)blankWidths[i]=(w-2*margin-64)*blankWidths[i]/blankSum;while(rowNumber<10){float x=margin;float rh=34;g.DrawRectangle(Pens.LightGray,x,y,64,rh);g.DrawString((++rowNumber).ToString(CultureInfo.InvariantCulture),regular,Brushes.Black,x+6,y+8);x+=64;foreach(float cw in blankWidths){g.DrawRectangle(Pens.LightGray,x,y,cw,rh);x+=cw;}y+=rh;}}
+    if(!string.IsNullOrEmpty(s.DocumentTotal)){y+=20;g.DrawString(s.DocumentTotalLabel??"Tổng cộng",bold,Brushes.Black,w-margin-390,y);string formatted=s.Screen=="purchase-receipt"?s.Data.Rows.Cast<DataRow>().Sum(r=>r["ThanhTien"]==DBNull.Value?0m:Convert.ToDecimal(r["ThanhTien"])).ToString("N0",CultureInfo.GetCultureInfo("vi-VN")):s.DocumentTotal;g.DrawString(formatted,bold,Brushes.Black,w-margin-180,y);y+=50;}
+    if(s.Screen=="purchase-receipt"){y+=6;DrawParagraph(g,"Số tiền viết bằng chữ: "+s.AmountInWords,regular,margin,y,w-2*margin);y+=50;}
     if(y+230>bottom){finish();g.Clear(Color.White);y=margin;g.DrawString(s.Title+" — tiếp theo",bold,Brushes.Black,margin,y);y+=70;}
     string[] labels=ReportOutput.SignatureLabels(s.Screen);float block=(w-2*margin)/(float)labels.Length;
     for(int i=0;i<labels.Length;i++){float x=margin+i*block;var size=g.MeasureString(labels[i],bold);g.DrawString(labels[i],bold,Brushes.Black,x+(block-size.Width)/2,y);var hint=g.MeasureString("(Ký, họ tên)",regular);g.DrawString("(Ký, họ tên)",regular,Brushes.Black,x+(block-hint.Width)/2,y+30);}
     finish();
    }
-   return Pack(pages,w,h,595,842);
+   return Pack(pages,w,h,842,595);
   }
   private static float DrawParagraph(Graphics g,string text,Font font,float x,float y,int width)
   { float height=g.MeasureString(text,font,width).Height; g.DrawString(text,font,Brushes.Black,new RectangleF(x,y,width,height+4)); return height; }

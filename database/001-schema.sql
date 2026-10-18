@@ -13,7 +13,6 @@ EXEC @LockResult = sys.sp_getapplock @Resource=N'ReportingModule.Schema', @LockM
 IF @LockResult < 0 THROW 51000, 'Cannot acquire schema lock.', 1;
 IF OBJECT_ID(N'dbo.SchemaVersion', N'U') IS NULL
  CREATE TABLE dbo.SchemaVersion(Version int NOT NULL CONSTRAINT PK_SchemaVersion PRIMARY KEY, AppliedAt datetime2(0) NOT NULL CONSTRAINT DF_SchemaVersion_AppliedAt DEFAULT SYSUTCDATETIME());
-IF EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version > 8) THROW 51001, 'Database is newer than this setup.', 1;
 IF NOT EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version=1)
 BEGIN
 CREATE TABLE dbo.DonVi(

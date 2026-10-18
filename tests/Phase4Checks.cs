@@ -101,6 +101,7 @@ class Phase4Checks
     DELETE d FROM dbo.CTChungTuKho d JOIN dbo.ChungTuKho h ON h.ChungTuKhoId=d.ChungTuKhoId WHERE h.MaDonVi=@u;
     DELETE dbo.ChungTuKho WHERE MaDonVi=@u;
     DELETE dbo.TonDauKy WHERE MaDonVi=@u;
+    DELETE dbo.Kho WHERE MaDonVi=@u;
     DELETE dbo.DonVi WHERE MaDonVi=@u;
     DELETE dbo.HangHoa WHERE MaHang=@i;
     COMMIT;",new SqlParameter("@u",unit),new SqlParameter("@i",item));

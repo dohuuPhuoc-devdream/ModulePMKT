@@ -1,4 +1,6 @@
-Current state: setup applies migrations through 009-purchase-receipt-invoice-uniqueness.sql (schema version 8). Inventory, commerce, payments, manual ledger, authentication, permissions, unit access and audit schema are implemented. The phase notes below retain the schema history; see ../README.md for current application setup.
+Current state: setup applies migrations through 011-stock-warehouse-slip.sql (schema version 10). Inventory, commerce, payments, manual ledger, authentication, permissions, unit access, legal unit profile fields, user default units and one default warehouse per unit are implemented. The phase notes below retain schema history; see ../README.md for current application setup.
+
+Migration 010 adds optional legal profile fields to `DonVi` and a single default assigned working unit to `AppUserUnit`. Migration 011 adds `Kho`, seeds `KHO01` per unit (including units created later), and adds voucher-level `MaKho` and `NguoiGiaoHang` fields. No company legal values are seeded. `SaveStockDocument` validates that a selected purchase-receipt warehouse belongs to the document unit.
 
 # SQL Server schema and synthetic seed
 

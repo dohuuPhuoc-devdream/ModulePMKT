@@ -20,6 +20,8 @@ namespace ReportingModule.Web
   private bool report,redirecting;
   private DropDownList unit;
   private DropDownList supplier;
+  private DropDownList warehouse;
+  private TextBox deliveryPerson;
   private TextBox from,to,filter,number,date,note;
   private Label message,summary,selection,editorUnit;
   private Panel editor;
@@ -74,7 +76,7 @@ namespace ReportingModule.Web
    number=new TextBox { ID="Number",MaxLength=30 }; AddField(header,"Số phiếu *",number);
    date=new TextBox { ID="DocumentDate",TextMode=TextBoxMode.Date }; AddField(header,"Ngày *",date);
    note=new TextBox { ID="Note",MaxLength=500 }; AddField(header,"Diễn giải",note);
-   if(screen=="purchase-receipt") { supplier=new DropDownList { ID="Supplier" }; AddField(header,"Nhà cung cấp *",supplier); }
+   if(screen=="purchase-receipt") { supplier=new DropDownList { ID="Supplier" }; AddField(header,"Nhà cung cấp *",supplier); warehouse=new DropDownList { ID="Warehouse" }; AddField(header,"Kho *",warehouse); deliveryPerson=new TextBox { ID="DeliveryPerson",MaxLength=120 }; AddField(header,"Người giao hàng",deliveryPerson); }
    var hint=new HtmlGenericControl("p"); hint.Attributes["class"]="muted"; hint.InnerText=NumberParser.Hint+" Số lượng tối đa 3 số lẻ; đơn giá tối đa 4. Dòng trống được bỏ qua. Phiếu đã ghi sổ không được sửa/xóa."; editor.Controls.Add(hint);
    detailHtml=new Literal(); editor.Controls.Add(detailHtml);
    add=Button(editor,"AddLine","Thêm dòng",()=>{if(lines.Count>=100) throw new ArgumentException("Tối đa 100 dòng."); lines.Add(new[]{"","",""});});
@@ -112,8 +114,11 @@ namespace ReportingModule.Web
     units=store.Units(); items=store.Items();
     unit.DataSource=units; unit.DataTextField="TenDonVi"; unit.DataValueField="MaDonVi"; unit.DataBind();
     if(supplier!=null) { var source=store.Suppliers(); supplier.DataSource=source; supplier.DataTextField="TenNCC"; supplier.DataValueField="MaNCC"; supplier.DataBind(); supplier.Items.Insert(0,new ListItem("Chọn nhà cung cấp","")); }
+    if(warehouse!=null && unit.Items.Count>0) BindWarehouses(unit.SelectedValue);
    });
   }
+  private void BindWarehouses(string unitCode)
+  { warehouse.Items.Clear(); var source=store.Warehouses(unitCode); warehouse.DataSource=source;warehouse.DataTextField="TenKho";warehouse.DataValueField="MaKho";warehouse.DataBind(); if(warehouse.Items.Count==0) warehouse.Items.Add(new ListItem("Chưa khai báo kho","")); }
   private void AddField(Control parent,string label,WebControl control)
   {
    var group=new Panel { CssClass="catalog-field" }; group.Controls.Add(new Label { Text=label,AssociatedControlID=control.ID }); group.Controls.Add(control); parent.Controls.Add(group);
@@ -172,7 +177,7 @@ namespace ReportingModule.Web
   {
    if(Criteria==null) throw new ArgumentException("Chọn đơn vị trước.");
    SelectedId=null; Version=null; DraftUnit=Criteria[0]; ReadOnlyMode=false;
-   number.Text=""; date.Text=DateTime.Today.ToString("yyyy-MM-dd"); note.Text=""; if(supplier!=null)supplier.SelectedIndex=0; lines=new List<string[]> { new[]{"","",""} }; editor.Visible=true;
+   number.Text=""; date.Text=DateTime.Today.ToString("yyyy-MM-dd"); note.Text=""; if(supplier!=null)supplier.SelectedIndex=0; if(warehouse!=null)BindWarehouses(DraftUnit); if(deliveryPerson!=null)deliveryPerson.Text=""; lines=new List<string[]> { new[]{"","",""} }; editor.Visible=true;
   }
   private void RequireSelection() { if(!SelectedId.HasValue||Criteria==null) throw new ArgumentException("Chọn một phiếu trước."); }
   private void LoadSelected(bool view)
@@ -183,12 +188,14 @@ namespace ReportingModule.Web
    Version=(byte[])d.Header["PhienBan"]; DraftUnit=Convert.ToString(d.Header["MaDonVi"]); ReadOnlyMode=view;
    number.Text=Convert.ToString(d.Header["SoChungTu"]); date.Text=((DateTime)d.Header["Ngay"]).ToString("yyyy-MM-dd"); note.Text=Convert.ToString(d.Header["DienGiai"]);
    if(supplier!=null && d.Header["MaNCC"]!=DBNull.Value) supplier.SelectedValue=Convert.ToString(d.Header["MaNCC"]);
+   if(warehouse!=null && d.Header["MaKho"]!=DBNull.Value) { BindWarehouses(DraftUnit); if(warehouse.Items.FindByValue(Convert.ToString(d.Header["MaKho"]))!=null)warehouse.SelectedValue=Convert.ToString(d.Header["MaKho"]); }
+   if(deliveryPerson!=null)deliveryPerson.Text=d.Header["NguoiGiaoHang"]==DBNull.Value?"":Convert.ToString(d.Header["NguoiGiaoHang"]);
    lines=d.Lines.Rows.Cast<DataRow>().Select(r=>new[]{Convert.ToString(r["MaHang"]),NumberParser.Format(r["SoLuong"]),NumberParser.Format(r["DonGia"])}).ToList(); editor.Visible=true;
   }
   private void Save(bool posting)
   {
    if(!editor.Visible || ReadOnlyMode) throw new ArgumentException("Mở phiếu nháp để lưu.");
-   store.Save(SelectedId,Version,DraftUnit,kind,number.Text,StockStore.Date(date.Text),note.Text,StockStore.ParseLines(lines),posting,supplier==null?null:supplier.SelectedValue,screen=="purchase-receipt");
+   store.Save(SelectedId,Version,DraftUnit,kind,number.Text,StockStore.Date(date.Text),note.Text,StockStore.ParseLines(lines),posting,supplier==null?null:supplier.SelectedValue,screen=="purchase-receipt",warehouse==null?"KHO01":warehouse.SelectedValue,deliveryPerson==null?null:deliveryPerson.Text);
    Done(posting?(screen=="purchase-receipt"?"Đã ghi sổ phiếu nhập mua và cập nhật tồn kho.":"Đã ghi sổ phiếu và cập nhật tồn kho."):"Đã lưu phiếu nháp; chưa tác động tồn kho.");
   }
   private void Export(string format)

@@ -6,10 +6,12 @@
 
 - Bảy phân hệ đúng V3; menu ngang luôn hiện, menu con lồng nhau, thanh công cụ theo chức năng và Làm tươi.
 - Bốn danh mục: đơn vị, khách hàng, nhà cung cấp, hàng hóa; CRUD, tìm kiếm, Excel import/export.
+- Đơn vị có trường thông tin pháp lý để người dùng tự khai báo; mỗi đơn vị có kho mặc định `KHO01`, người dùng có đơn vị làm việc mặc định.
 - Phiếu nhập mua cập nhật kho; hóa đơn mua liên kết phiếu nhập và cập nhật công nợ riêng. Hóa đơn bán tạo phiếu xuất liên kết. Đơn hàng, bản nháp, ghi sổ nguyên tử, kiểm tra tồn kho và xung đột sửa đổi.
 - Thanh toán từng hóa đơn; báo cáo công nợ khách hàng/nhà cung cấp.
 - Phiếu kế toán thủ công và bảng cân đối đại diện với hệ tài khoản thực hành.
 - 11 báo cáo truy vấn SQL thực; Print/PDF/Excel từ toàn bộ kết quả theo điều kiện đã áp dụng.
+- Phiếu nhập mua có mẫu in riêng và mẫu Excel có công thức tổng tiền, kho, người giao hàng, thông tin đối tác và số tiền bằng chữ.
 
 ## Chuẩn bị và chạy
 
@@ -24,7 +26,7 @@ sqlcmd -S '.\SQLEXPRESS' -E -C -b -l 10 -f 65001 -i database/setup.sql
 & 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe' ReportingModule.sln /t:Build /p:Configuration=Release /nologo /verbosity:minimal
 ```
 
-Setup tạo database demo `ReportingModuleDemo`, áp dụng migration đến version 8 và seed dữ liệu. Chạy lại giữ dữ liệu; từ chối database có sẵn không mang dấu demo của dự án. Không dùng dữ liệu công ty thật.
+Setup tạo database demo `ReportingModuleDemo`, áp dụng migration đến version 10 và seed dữ liệu. Chạy lại giữ dữ liệu; từ chối database có sẵn không mang dấu demo của dự án. Không dùng dữ liệu công ty thật.
 
 Sau khi chạy setup, tạo Administrator đầu tiên tại máy bằng script dưới đây. Script yêu cầu mật khẩu trực tiếp trong PowerShell dưới dạng secure string và không lưu nó vào dự án:
 

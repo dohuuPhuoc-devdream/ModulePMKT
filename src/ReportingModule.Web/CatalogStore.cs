@@ -107,6 +107,31 @@ namespace ReportingModule.Web
   public void Delete(CatalogDefinition d,object[] original)
   {
    DemandUnitAdmin(d);
+   if(d.Id=="units")
+   {
+    using(var c=Open())using(var tx=c.BeginTransaction(IsolationLevel.Serializable))using(var cmd=c.CreateCommand())
+    {
+     cmd.Transaction=tx;
+     cmd.CommandText="SELECT MaDonVi FROM dbo.DonVi WITH(UPDLOCK,HOLDLOCK) WHERE MaDonVi=@unit";cmd.Parameters.Add("@unit",SqlDbType.VarChar,20).Value=original==null||original.Length==0?"":original[0];
+     if(cmd.ExecuteScalar()==null)throw new ArgumentException("Bản ghi không còn tồn tại. Hãy làm tươi.");
+     cmd.Parameters.Clear();
+     cmd.CommandText=@"SELECT (SELECT COUNT_BIG(*) FROM dbo.TonDauKy WITH(UPDLOCK,HOLDLOCK) WHERE MaDonVi=@unit)+
+      (SELECT COUNT_BIG(*) FROM dbo.ChungTuKho WITH(UPDLOCK,HOLDLOCK) WHERE MaDonVi=@unit)+
+      (SELECT COUNT_BIG(*) FROM dbo.ChungTuThuongMai WITH(UPDLOCK,HOLDLOCK) WHERE MaDonVi=@unit)+
+      (SELECT COUNT_BIG(*) FROM dbo.PhieuKeToan WITH(UPDLOCK,HOLDLOCK) WHERE MaDonVi=@unit)+
+      (SELECT COUNT_BIG(*) FROM dbo.AppUserUnit WITH(UPDLOCK,HOLDLOCK) WHERE MaDonVi=@unit)";
+     cmd.Parameters.Add("@unit",SqlDbType.VarChar,20).Value=original[0];
+     if(Convert.ToInt64(cmd.ExecuteScalar())>0)throw new ArgumentException("Đơn vị đã có dữ liệu hoặc người dùng được gán; không thể xóa.");
+     cmd.Parameters.Clear();string where=Original(cmd,d,original);
+     cmd.CommandText="SELECT COUNT(*) FROM dbo.DonVi WHERE "+where;
+     if(Convert.ToInt32(cmd.ExecuteScalar())!=1)throw new ArgumentException("Dữ liệu đã thay đổi. Hãy làm tươi và chọn lại.");
+     cmd.Parameters.Clear();where=Original(cmd,d,original);
+     cmd.CommandText="DELETE dbo.Kho WHERE MaDonVi=@unit; DELETE dbo.DonVi WHERE "+where;
+     cmd.Parameters.Add("@unit",SqlDbType.VarChar,20).Value=original[0];
+     cmd.ExecuteNonQuery();
+     tx.Commit();return;
+    }
+   }
    using(var c=Open())
    using(var cmd=c.CreateCommand())
    {
