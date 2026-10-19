@@ -25,7 +25,7 @@ Browser inspection of actual captured ASP.NET inventory HTML confirmed compact h
 
 ## Remaining validation
 
-IIS/IIS Express and Visual Studio WebApplication targets are absent. Live browser E2E, full responsive/keyboard audit and physical/browser printing remain pending. No tooling was installed. Follow DEMO.md once a suitable host is available. PDF is image-based; the representative ledger is manual, not a statutory accounting implementation. See README for full scope limits.
+Live browser E2E, full responsive/keyboard audit and physical/browser printing remain pending. Follow DEMO.md once a suitable host is available. The current report and voucher PDFs use QuestPDF vector text; the representative ledger remains manual and is not a statutory accounting implementation. See README for full scope limits.
 
 ## Files
 

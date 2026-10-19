@@ -39,6 +39,7 @@ class Phase11Checks
   var voucher=ReportOutput.FromSnapshot(snapshot);Check(voucher.Title,"Phiếu nhập mua");Check(voucher.UnitName,"Công ty thử");Check(voucher.Lines.Rows.Count,1);Check(voucher.Landscape,true);Check(voucher.SignatureLabels.Length,4);
   string html=ReportOutput.Html(snapshot);CheckHtml(html,"Công ty thử");CheckHtml(html,"PHIẾU NHẬP MUA");CheckHtml(html,"KHO01");CheckHtml(html,"Số tiền viết bằng chữ: Một trăm sáu mươi nghìn đồng chẵn");CheckHtml(html,"Người giao hàng");CheckHtml(html,"voucher-blank");
   byte[] pdf=ReportPdf.Export(snapshot);Check(Encoding.ASCII.GetString(pdf.Take(8).ToArray()),"%PDF-1.4");
+  string pdfDirectory=Path.Combine(Environment.CurrentDirectory,"artifacts","phase11");Directory.CreateDirectory(pdfDirectory);File.WriteAllBytes(Path.Combine(pdfDirectory,"purchase-receipt.pdf"),pdf);
   byte[] workbook=ReportExcel.Export(snapshot);using(var input=new MemoryStream(workbook))using(var zip=new ZipArchive(input,ZipArchiveMode.Read)){XNamespace ns="http://schemas.openxmlformats.org/spreadsheetml/2006/main";XDocument sheet;using(var stream=zip.GetEntry("xl/worksheets/sheet1.xml").Open())sheet=XDocument.Load(stream);CheckHtml(string.Join(",",sheet.Descendants(ns+"f").Select(f=>f.Value)),"SUM(H14:H23)");CheckHtml(sheet.Descendants(ns+"c").Where(c=>(string)c.Attribute("r")=="H14").Select(c=>c.Element(ns+"v")!=null&&c.Attribute("t")==null?"numeric":"not numeric").FirstOrDefault(),"numeric");}
   Console.WriteLine("ALL PHASE 11 NUMBER AND PURCHASE TEMPLATE CHECKS PASSED");
  }

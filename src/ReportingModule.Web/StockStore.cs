@@ -60,6 +60,10 @@ namespace ReportingModule.Web
    }
    ValidateLines(lines); return lines;
   }
+  // Match SQL Server ROUND(..., 4): round each detail amount away from zero
+  // before the document total sums the persisted detail amounts.
+  public static decimal CalculateLineAmount(decimal quantity,decimal price)
+  { return decimal.Round(quantity*price,4,MidpointRounding.AwayFromZero); }
   internal static void ValidateLines(IList<StockLine> lines)
   {
    if(lines==null||lines.Count<1||lines.Count>100) throw new ArgumentException("Phiếu cần từ 1 đến 100 dòng.");

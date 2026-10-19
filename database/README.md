@@ -104,15 +104,40 @@ completed business backend or allow unvalidated posting from a UI. These require
 transactional services/procedures in their respective phases, including a stock
 check and write in one concurrency-safe transaction.
 
+## TT99 Appendix II source received for Phase 11
+
+`seed/tt99-accounts.csv` is copied byte-for-byte from the CSV supplied by the
+user on 2026-10-19. The file contains 184 account rows: 71 level-1, 101 level-2,
+10 level-3 and 2 level-4 accounts. Codes are unique, parent codes resolve, the
+level-1 sequence is continuous from 1 to 71, and `LaTaiKhoanLa` agrees with the
+parent-child structure. The selected codes and names listed in the Phase 11
+task were checked against Appendix II in the [Government Gazette's official
+Thông tư 99/2025/TT-BTC PDF](https://congbao.chinhphu.vn/tai-ve-van-ban-so-99-2025-tt-btc-46529-59634?format=pdf).
+
+The supplied CSV columns are `MaTK, TenTK, Cap, MaTKCha, SoTTCap1,
+LoaiTaiKhoan, LaTaiKhoanLa`. It does **not** contain the normal-balance
+classification (`N`, `C`, or `L`) required by migration 012. Do not derive that
+accounting property from `LoaiTaiKhoan`: contra accounts and accounts that can
+carry either balance would be misclassified. Account import/migration 012 is
+therefore pending an authoritative source column or an approved mapping. The
+CSV is staged as source data only; it has not yet been loaded into `TaiKhoan`.
+
 ## Seed
 
 One clearly labeled demo unit, 10 generic synthetic items, five synthetic
 customers and five synthetic suppliers. Tax IDs, addresses and phone numbers are
-left null; no company data is fabricated. HANG001 opens at 100, other items at 0.
+left null in the pristine baseline. HANG001 opens at 100, other items at 0.
 No receipts, issues, invoices, journal entries or report results are seeded.
 Phase 4 acceptance creates PN001 +50 and PX001 -20 through the actual write path,
 verifies 130, and rejects issue 200 atomically. The Phase 3–9 regression run and
 independent SQL checks pass this acceptance on the local demo database.
+
+On 2026-10-19, at the user's request, only the existing local `DVDEMO` row was
+updated to use the synthetic display/legal name `Công ty TNHH PicoCorp` and
+practice address `Số 01, Đường Mẫu, Phường An Khánh, Thành phố Hồ Chí Minh`.
+Tax ID, representative, phone and email remain blank because no verified values
+were provided. This local-only update does not change the seed or migration
+history; it is not a verified legal identity.
 
 ## Phase 5 upgrade
 setup.sql includes 004-commerce.sql (schema version 3), 008-purchase-workflow.sql (version 7), and 009-purchase-receipt-invoice-uniqueness.sql (version 8). Sales invoices create one linked warehouse issue. Purchase receipts carry supplier and change stock; each receipt can be referenced by at most one purchase invoice, and invoices do not change stock again. Orders do not affect stock. See [Phase 5 defaults](../docs/PHASE5.md). Existing demo stock documents are preserved; legacy combined purchase facts are linked by migration without replaying their stock effect.

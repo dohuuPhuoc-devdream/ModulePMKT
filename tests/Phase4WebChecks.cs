@@ -8,6 +8,7 @@ using System.Web.Hosting;
 using System.Threading;
 using System.Linq;
 using System.Data;
+using System.Data.SqlClient;
 using ReportingModule.Web;
 
 [Serializable]
@@ -80,6 +81,8 @@ class Phase4WebChecks
  { return new Dictionary<string,string>{{"Unit","DVDEMO"},{"From","2026-01-01"},{"To","2026-12-31"},{"Filter",item}}; }
  static Dictionary<string,string> Line(string qty)
  { return new Dictionary<string,string>{{"lineCount","1"},{"item0","HANG001"},{"qty0",qty},{"price0","100"}}; }
+ static void SQL(string text,params SqlParameter[] parameters)
+ { using(var connection=new SqlConnection("Data Source=.\\SQLEXPRESS;Initial Catalog=ReportingModuleDemo;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;Connect Timeout=10")){connection.Open();using(var command=new SqlCommand(text,connection)){command.Parameters.AddRange(parameters);command.ExecuteNonQuery();}} }
  static void Document(string kind,string number,string date,string qty)
  {
   var existing=store.List("DVDEMO",kind,first,last,number).Rows.Cast<DataRow>().Where(r=>(string)r["SoChungTu"]==number).ToArray();
@@ -104,6 +107,18 @@ class Phase4WebChecks
   Directory.CreateDirectory("artifacts/phase4");
   store=new StockStore("Data Source=.\\SQLEXPRESS;Initial Catalog=ReportingModuleDemo;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;Connect Timeout=10");
   runner=(StockRunner)ApplicationHost.CreateApplicationHost(typeof(StockRunner),"/",Path.GetFullPath(args[0]));
+  string warehouseUnit="WH4"+Guid.NewGuid().ToString("N").Substring(0,8),warehouseA="WA4"+Guid.NewGuid().ToString("N").Substring(0,7),warehouseB="WB4"+Guid.NewGuid().ToString("N").Substring(0,7);
+  var catalogs=new CatalogStore("Data Source=.\\SQLEXPRESS;Initial Catalog=ReportingModuleDemo;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;Connect Timeout=10");
+  catalogs.Create(CatalogDefinition.Get("units"),new[]{warehouseUnit,"Phase 4 warehouse unit","2026-01-01"});
+  SQL("INSERT dbo.Kho(MaDonVi,MaKho,TenKho) VALUES('DVDEMO',@w,N'DVDEMO warehouse'),(@u,@w2,N'Other unit warehouse')",new SqlParameter("@w",warehouseA),new SqlParameter("@u",warehouseUnit),new SqlParameter("@w2",warehouseB));
+  try {
+   Screen("purchase-receipt");query="screen=purchase-receipt&unit="+warehouseUnit+"&from=2026-01-01&to=2026-12-31";
+   var warehousePage=Post(Request(),"New");
+   Check(warehousePage.Body.Contains("value=\""+warehouseB+"\"")&&!warehousePage.Body.Contains("value=\""+warehouseA+"\""),"warehouse choices are rebound to the selected unit after Web Forms applies post data");
+  } finally {
+   SQL("DELETE dbo.Kho WHERE (MaDonVi='DVDEMO' AND MaKho=@a) OR (MaDonVi=@u AND MaKho=@b)",new SqlParameter("@a",warehouseA),new SqlParameter("@u",warehouseUnit),new SqlParameter("@b",warehouseB));
+   catalogs.Delete(CatalogDefinition.Get("units"),catalogs.Find(CatalogDefinition.Get("units"),warehouseUnit));
+  }
   Document("N","PN001","2026-01-02","50");
   Document("X","PX001","2026-01-03","20");
   var report=store.Report("DVDEMO",first,last,"HANG001","T").Rows[0];

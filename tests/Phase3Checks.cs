@@ -71,7 +71,9 @@ class Phase3Checks
    var units=CatalogDefinition.Get("units"); var unit=store.Find(units,"DVDEMO"); var change=Strings(unit); change[2]="2027-01-01";
    Reject(()=>store.Update(units,change,unit),"unit opening date protected after opening balances");
    Check(units.Validate(new[]{"TAX10","Tax test","2026-01-01","","","0101234565","","",""}).Length==9,"valid 10 digit tax ID accepted");
+   Check(units.Validate(new[]{"TAX10B","Tax test","2026-01-01","","","1000000001","","",""}).Length==9,"second valid 10 digit tax ID accepted");
    Reject(()=>units.Validate(new[]{"TAXBAD","Tax test","2026-01-01","","","0101234566","","",""}),"invalid tax ID check digit rejected");
+   Reject(()=>units.Validate(new[]{"TAXZERO","Tax test","2026-01-01","","","1000000080","","",""}),"tax ID with checksum remainder zero rejected");
    Reject(()=>items.Validate(new[]{"NEG","Name","Cái","-1","0"}),"negative price");
    Reject(()=>items.Validate(new[]{"PREC","Name","Cái","1.12345","0"}),"excess decimal precision");
    Reject(()=>items.Validate(new[]{"MAX","Name","Cái","1000000000000000","0"}),"decimal overflow");

@@ -3,10 +3,11 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 Push-Location $root
 try {
+    $manageTestIdentity = $env:MODULEPMKT_TEST_IDENTITY_PREPARED -ne '1'
     $compiler = 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
     & 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe' ReportingModule.sln /t:Build /p:Configuration=Release /nologo /verbosity:minimal
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
-    & '.\tests\set-test-identity.ps1' -Action Enable -ConnectionString $ConnectionString
+    if ($manageTestIdentity) { & '.\tests\set-test-identity.ps1' -Action Enable -ConnectionString $ConnectionString }
     & $compiler /nologo /out:src\ReportingModule.Web\bin\Phase4Checks.exe /r:src\ReportingModule.Web\bin\ReportingModule.Web.dll /r:System.Data.dll /r:System.Core.dll tests\Phase4Checks.cs
     if ($LASTEXITCODE -ne 0) { throw 'Test compilation failed.' }
     & '.\src\ReportingModule.Web\bin\Phase4Checks.exe' $ConnectionString
@@ -17,7 +18,7 @@ try {
     & '.\src\ReportingModule.Web\bin\Phase4WebChecks.exe' '.\src\ReportingModule.Web'
     if ($LASTEXITCODE -ne 0) { throw 'Web Forms acceptance failed.' }
 } finally {
-    & '.\tests\set-test-identity.ps1' -Action Disable -ConnectionString $ConnectionString
+    if ($manageTestIdentity) { & '.\tests\set-test-identity.ps1' -Action Disable -ConnectionString $ConnectionString }
     foreach ($file in @('Phase4Checks.exe','Phase4WebChecks.exe')) {
         $target = Join-Path $root ('src\ReportingModule.Web\bin\' + $file)
         if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target }

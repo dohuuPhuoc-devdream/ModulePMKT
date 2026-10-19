@@ -57,9 +57,9 @@ Trong PowerShell tại thư mục dự án, chạy `.\tools\run-local.ps1` rồi
 .\tests\run-phase10.ps1
 ```
 
-Chạy bằng tài khoản Windows truy cập được SQL demo. `run-all.ps1` chạy Phase 3–9 và kiểm tra SQL độc lập; `run-phase10.ps1` chạy Release build, ASP.NET precompile và security tests. Log Phase 3–9 nằm ở `artifacts/quality`. Test tạo fixture riêng. Phase 4 giữ PN001/PX001 cho nghiệm thu HANG001: 100 + 50 - 20 = 130; xuất 200 bị từ chối nguyên tử. Không chạy test này trên database nghiệp vụ thật.
+Chạy bằng tài khoản Windows truy cập được SQL demo. `run-all.ps1` chạy Phase 3–9, Phase 11 và kiểm tra SQL/PDF/Excel độc lập; khóa chạy song song, bật tài khoản test một lần và tắt tài khoản sau suite. Log nằm ở `artifacts/quality`. Mỗi phase tạo và dọn fixture riêng. Phase 4 giữ PN001/PX001 cho nghiệm thu HANG001: 100 + 50 - 20 = 130; xuất 200 bị từ chối nguyên tử. Không chạy test này trên database nghiệp vụ thật.
 
-`tests/verify-phase8.py` là kiểm tra độc lập tùy chọn cho file kết xuất, cần openpyxl, pypdf, pypdfium2 và Pillow; các thư viện QA có sẵn trong runtime Codex, không phải dependency của ứng dụng. Ứng dụng không có package bên thứ ba mới.
+`tests/verify-phase8.py` kiểm tra độc lập file kết xuất, cần openpyxl, pypdf, pypdfium2 và Pillow; các thư viện QA có sẵn trong runtime Codex, không phải dependency của ứng dụng. PDF được tạo bằng QuestPDF 2026.9.1 (Community license cho mục đích học tập) và nhúng chữ tiếng Việt có thể chọn/tìm. Các package runtime và binding redirects nằm trong `packages.config`/`Web.config`.
 
 ## Phạm vi và giới hạn
 
@@ -68,7 +68,9 @@ Chạy bằng tài khoản Windows truy cập được SQL demo. `run-all.ps1` c
 - Liên kết hiện tại cho phép một phiếu nhập trên mỗi hóa đơn mua; chưa đối chiếu số lượng/giá từng dòng, chưa phân bổ một hóa đơn cho nhiều phiếu nhập.
 - Công nợ dựa trên hóa đơn và thanh toán đã ghi nhận; chưa có số dư công nợ đầu kỳ nhập ngoài, ứng trước hoặc đảo thanh toán.
 - Sổ tổng hợp nhập thủ công, chưa tự hạch toán từ kho/mua/bán/thanh toán. Bảng cân đối và tài khoản chỉ mang tính thực hành.
-- PDF là ảnh có phân trang, không tìm kiếm/chọn văn bản. Kết xuất tối đa 5.000 dòng và PDF tối đa 200 trang; quá giới hạn báo lỗi, không cắt dữ liệu âm thầm.
+- PDF báo cáo và chứng từ là văn bản vector có thể tìm/chọn. Kết xuất tối đa 5.000 dòng; quá giới hạn báo lỗi, không cắt dữ liệu âm thầm.
+- Danh mục tài khoản TT99 đã được nhận và kiểm tra cấu trúc trong `database/seed/tt99-accounts.csv`, nhưng chưa nạp vào cơ sở dữ liệu. CSV không có tính chất dư Nợ/Có/lưỡng tính cần cho schema; không suy đoán từ nhóm tài khoản.
+- Đơn vị demo local `DVDEMO` đang hiển thị tên và địa chỉ PicoCorp giả lập; MST để trống. Đây là dữ liệu cục bộ, chưa phải thông tin pháp lý đã xác minh.
 - Snapshot kết xuất thuộc phiên, hết hạn sau 20 phút, tối đa 8 snapshot. Sửa ô lọc mà chưa áp dụng không đổi dữ liệu kết xuất.
 
 ## Tài liệu

@@ -85,7 +85,10 @@ namespace ReportingModule.Web
    if(!Regex.IsMatch(value,@"\A(?:\d{10}|\d{13})\z",RegexOptions.CultureInvariant)) return false;
    int[] weights={31,29,23,19,17,13,7,5,3}; int sum=0;
    for(int i=0;i<weights.Length;i++) sum+=(value[i]-'0')*weights[i];
-   return (10-(sum%11))%10==value[9]-'0';
+   int remainder=sum%11;
+   // A remainder of zero yields a check value of 10, which is not a decimal digit.
+   // Do not fold it to zero: that incorrectly accepts some invalid tax codes.
+   return remainder!=0 && 10-remainder==value[9]-'0';
   }
   public static string Text(object value)
   {

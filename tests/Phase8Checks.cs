@@ -31,7 +31,7 @@ class Phase8Checks
   string voucher=ReportOutput.Html(voucherSnapshot);
   string voucherText=HttpUtility.HtmlDecode(voucher);
   Check(voucher.Contains("voucher-print")&&voucher.Contains("voucher-signatures")&&voucher.Contains("DEMO-N-1610"),"document print uses a designed voucher layout");
-  Check(voucherText.Contains("Đơn vị PicoCorp")&&voucherText.Contains("Nhà cung cấp 1")&&voucherText.Contains("12 Đường Mẫu"),"voucher includes saved unit and partner details");
+  Check(voucherText.Contains("Đơn vị PicoCorp")&&voucherText.Contains("Nhà cung cấp")&&voucherText.Contains("Nhà cung cấp 1")&&voucherText.Contains("12 Đường Mẫu"),"voucher includes unit and supplier details with the correct label");
   Check(!voucher.Contains("Chứng từ nội bộ")&&!voucher.Contains("phục vụ thực hành")&&!voucher.Contains("không thay thế hóa đơn"),"voucher template has no internal/training disclaimer");
   var voucherPdf=ReportPdf.Export(voucherSnapshot);
   Check(Encoding.ASCII.GetString(voucherPdf,0,5)=="%PDF-","document PDF uses the voucher print renderer");

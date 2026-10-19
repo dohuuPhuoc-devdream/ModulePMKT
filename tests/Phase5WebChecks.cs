@@ -49,12 +49,15 @@ public class CommerceRunner : MarshalByRefObject
 class Phase5WebChecks
 {
  static string unit,alternateUnit; static CommerceRunner runner; static CommerceStore store; static string cookie,query;
+ static string lastStatus="not started",lastLocation="";
  static DateTime first=new DateTime(2026,1,1),last=new DateTime(2026,12,31);
- static void Check(bool condition,string name) { if(!condition) throw new Exception(name); Console.WriteLine("PASS: "+name); }
+ static void Check(bool condition,string name) { if(!condition) throw new Exception(name+"; last response status="+lastStatus+", location="+lastLocation+" (see artifacts/phase5/web-last-response.html)"); Console.WriteLine("PASS: "+name); }
  static CommerceResult Request(string post=null)
  {
   var r=runner.Run(query,post,cookie); if(!string.IsNullOrEmpty(r.Cookie)) cookie=r.Cookie;
   File.WriteAllText("artifacts/phase5/web-last-response.html",r.Body);
+  lastStatus=r.Status.ToString();lastLocation=r.Location??"";
+  File.WriteAllText("artifacts/phase5/web-last-response.txt","Status: "+lastStatus+Environment.NewLine+"Location: "+lastLocation+Environment.NewLine);
   if(r.Status>=500) throw new Exception("ASP.NET error; see artifacts/phase5/web-last-response.html");
   return r;
  }

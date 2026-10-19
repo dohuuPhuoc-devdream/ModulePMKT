@@ -5,25 +5,35 @@ import pypdfium2 as pdfium
 from PIL import Image,ImageOps,ImageDraw
 root=Path('artifacts/phase8')
 for path in root.glob('*.pdf'):
+    assert path.stat().st_size > 500, f'{path.name} is empty or incomplete'
     reader=PdfReader(path, strict=True)
     assert len(reader.pages)>0
     for page in reader.pages:
-        assert len(page.images)==1 and float(page.mediabox.width) in (842,595)
+        assert float(page.mediabox.width)==842 and float(page.mediabox.height)==595, f'{path.name} has unexpected page size'
     print(path.name,len(reader.pages),'pages valid')
+    text='\n'.join(page.extract_text() or '' for page in reader.pages)
+    if path.name=='multipage.pdf':
+        for value in ('BÁO CÁO KIỂM THỬ TIẾNG VIỆT','ROW0','ROW72','73 dòng'):
+            assert value in text, f'multipage.pdf is missing searchable text {value!r}'
+    if path.name=='voucher-template.pdf':
+        for value in ('PHIẾU NHẬP MUA','DEMO-N-1610','Nhà cung cấp 1','Tổng cộng','Người nhận hàng','Thủ kho'):
+            assert value in text, f'voucher-template.pdf is missing searchable text {value!r}'
     doc=pdfium.PdfDocument(str(path))
     for i in range(len(doc)):
         doc[i].render(scale=1.4).to_pil().save(root/(path.stem+f'-{i+1}.png'))
+print('QuestPDF report and voucher PDF text is searchable')
 for path in root.glob('*.xlsx'):
     wb=load_workbook(path,data_only=False);ws=wb.active
-    assert ws['A1'].value and ws['A2'].value
-    assert not any(c.data_type=='f' for row in ws for c in row)
-    print(path.name,ws.max_row-5,'data rows valid')
+    if path.name!='voucher-template.xlsx':
+        assert ws['A1'].value and ws['A2'].value
+        print(path.name,ws.max_row-5,'data rows valid')
 voucher=load_workbook(root/'voucher-template.xlsx',data_only=False).active
-assert voucher['A1'].value=='PicoCorp Accounting' and voucher['A3'].value=='PHIẾU NHẬP MUA HÀNG'
-assert voucher['B7'].value.startswith('Nhà cung cấp 1')
-assert voucher.page_setup.orientation=='portrait' and str(voucher.page_setup.paperSize)=='9'
+assert voucher['A1'].value=='Đơn vị PicoCorp' and voucher['A4'].value=='PHIẾU NHẬP MUA'
+assert voucher['A8'].value=='Nhà cung cấp' and voucher['B8'].value=='Nhà cung cấp 1'
+assert voucher.page_setup.orientation=='landscape' and str(voucher.page_setup.paperSize)=='9'
 assert voucher.print_area and voucher.max_row>=17
-assert voucher['A11'].fill.fgColor.rgb=='FFE8EEF3' and voucher['A1'].font.color.rgb=='FF174D73'
+assert voucher['A13'].fill.fgColor.rgb=='FFE8EEF3'
+assert any(cell.data_type=='f' and cell.value.startswith('=SUM(') for row in voucher.iter_rows() for cell in row)
 print('voucher-template.xlsx designed print layout valid')
 ws=load_workbook(root/'multipage.xlsx').active
 assert ws.max_row==78 and ws['A78'].value=='ROW72'

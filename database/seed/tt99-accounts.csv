@@ -1,0 +1,185 @@
+﻿MaTK,TenTK,Cap,MaTKCha,SoTTCap1,LoaiTaiKhoan,LaTaiKhoanLa
+111,Tiền mặt,1,,1,LOẠI TÀI KHOẢN TÀI SẢN,1
+112,Tiền gửi không kỳ hạn,1,,2,LOẠI TÀI KHOẢN TÀI SẢN,1
+113,Tiền đang chuyển,1,,3,LOẠI TÀI KHOẢN TÀI SẢN,1
+121,Chứng khoán kinh doanh,1,,4,LOẠI TÀI KHOẢN TÀI SẢN,1
+128,Đầu tư nắm giữ đến ngày đáo hạn,1,,5,LOẠI TÀI KHOẢN TÀI SẢN,0
+1281,Tiền gửi có kỳ hạn,2,128,,LOẠI TÀI KHOẢN TÀI SẢN,1
+1282,Trái phiếu,2,128,,LOẠI TÀI KHOẢN TÀI SẢN,1
+1283,Cho vay,2,128,,LOẠI TÀI KHOẢN TÀI SẢN,1
+1288,Các khoản đầu tư khác nắm giữ đến ngày đáo hạn,2,128,,LOẠI TÀI KHOẢN TÀI SẢN,1
+131,Phải thu của khách hàng,1,,6,LOẠI TÀI KHOẢN TÀI SẢN,1
+133,Thuế GTGT được khấu trừ,1,,7,LOẠI TÀI KHOẢN TÀI SẢN,0
+1331,"Thuế GTGT được khấu trừ của hàng hóa, dịch vụ",2,133,,LOẠI TÀI KHOẢN TÀI SẢN,1
+1332,Thuế GTGT được khấu trừ của TSCĐ,2,133,,LOẠI TÀI KHOẢN TÀI SẢN,1
+136,Phải thu nội bộ,1,,8,LOẠI TÀI KHOẢN TÀI SẢN,0
+1361,Vốn kinh doanh ở đơn vị trực thuộc,2,136,,LOẠI TÀI KHOẢN TÀI SẢN,1
+1362,Phải thu nội bộ về chênh lệch tỷ giá,2,136,,LOẠI TÀI KHOẢN TÀI SẢN,1
+1363,Phải thu nội bộ về chi phí đi vay đủ điều kiện được vốn hoá,2,136,,LOẠI TÀI KHOẢN TÀI SẢN,1
+1368,Phải thu nội bộ khác,2,136,,LOẠI TÀI KHOẢN TÀI SẢN,1
+138,Phải thu khác,1,,9,LOẠI TÀI KHOẢN TÀI SẢN,0
+1381,Tài sản thiếu chờ xử lý,2,138,,LOẠI TÀI KHOẢN TÀI SẢN,1
+1383,Thuế TTĐB của hàng nhập khẩu,2,138,,LOẠI TÀI KHOẢN TÀI SẢN,1
+1388,Phải thu khác,2,138,,LOẠI TÀI KHOẢN TÀI SẢN,1
+141,Tạm ứng,1,,10,LOẠI TÀI KHOẢN TÀI SẢN,1
+151,Hàng mua đang đi đường,1,,11,LOẠI TÀI KHOẢN TÀI SẢN,1
+152,"Nguyên liệu, vật liệu",1,,12,LOẠI TÀI KHOẢN TÀI SẢN,1
+153,"Công cụ, dụng cụ",1,,13,LOẠI TÀI KHOẢN TÀI SẢN,1
+154,"Chi phí sản xuất, kinh doanh dở dang",1,,14,LOẠI TÀI KHOẢN TÀI SẢN,1
+155,Sản phẩm,1,,15,LOẠI TÀI KHOẢN TÀI SẢN,1
+156,Hàng hóa,1,,16,LOẠI TÀI KHOẢN TÀI SẢN,1
+157,Hàng gửi đi bán,1,,17,LOẠI TÀI KHOẢN TÀI SẢN,1
+158,"Nguyên liệu, vật tư tại kho bảo thuế",1,,18,LOẠI TÀI KHOẢN TÀI SẢN,1
+171,"Giao dịch mua, bán lại trái phiếu chính phủ",1,,19,LOẠI TÀI KHOẢN TÀI SẢN,1
+211,Tài sản cố định hữu hình,1,,20,LOẠI TÀI KHOẢN TÀI SẢN,1
+212,Tài sản cố định thuê tài chính,1,,21,LOẠI TÀI KHOẢN TÀI SẢN,1
+213,Tài sản cố định vô hình,1,,22,LOẠI TÀI KHOẢN TÀI SẢN,1
+214,Hao mòn tài sản cố định,1,,23,LOẠI TÀI KHOẢN TÀI SẢN,0
+2141,Hao mòn TSCĐ hữu hình,2,214,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2142,Hao mòn TSCĐ thuê tài chính,2,214,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2143,Hao mòn TSCĐ vô hình,2,214,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2147,Hao mòn BĐSĐT,2,214,,LOẠI TÀI KHOẢN TÀI SẢN,1
+215,Tài sản sinh học,1,,24,LOẠI TÀI KHOẢN TÀI SẢN,0
+2151,Súc vật nuôi cho sản phẩm định kỳ,2,215,,LOẠI TÀI KHOẢN TÀI SẢN,0
+21511,Súc vật nuôi cho sản phẩm định kỳ chưa đạt đến giai đoạn trưởng thành,3,2151,,LOẠI TÀI KHOẢN TÀI SẢN,1
+21512,Súc vật nuôi cho sản phẩm định kỳ đạt đến giai đoạn trưởng thành,3,2151,,LOẠI TÀI KHOẢN TÀI SẢN,0
+215121,Nguyên giá,4,21512,,LOẠI TÀI KHOẢN TÀI SẢN,1
+215122,Giá trị khấu hao lũy kế,4,21512,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2152,Súc vật nuôi lấy sản phẩm một lần,2,215,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2153,Cây trồng theo mùa vụ hoặc lấy sản phẩm một lần,2,215,,LOẠI TÀI KHOẢN TÀI SẢN,1
+217,Bất động sản đầu tư,1,,25,LOẠI TÀI KHOẢN TÀI SẢN,1
+221,Đầu tư vào công ty con,1,,26,LOẠI TÀI KHOẢN TÀI SẢN,1
+222,"Đầu tư vào công ty liên doanh, liên kết",1,,27,LOẠI TÀI KHOẢN TÀI SẢN,1
+228,Đầu tư khác,1,,28,LOẠI TÀI KHOẢN TÀI SẢN,0
+2281,Đầu tư góp vốn vào đơn vị khác,2,228,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2288,Đầu tư khác,2,228,,LOẠI TÀI KHOẢN TÀI SẢN,1
+229,Dự phòng tổn thất tài sản,1,,29,LOẠI TÀI KHOẢN TÀI SẢN,0
+2291,Dự phòng giảm giá chứng khoán kinh doanh,2,229,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2292,Dự phòng tổn thất đầu tư vào đơn vị khác,2,229,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2293,Dự phòng phải thu khó đòi,2,229,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2294,Dự phòng giảm giá hàng tồn kho,2,229,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2295,Dự phòng tổn thất tài sản sinh học,2,229,,LOẠI TÀI KHOẢN TÀI SẢN,1
+241,Xây dựng cơ bản dở dang,1,,30,LOẠI TÀI KHOẢN TÀI SẢN,0
+2411,Mua sắm TSCĐ,2,241,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2412,Xây dựng cơ bản,2,241,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2413,"Sửa chữa, bảo dưỡng định kỳ TSCĐ",2,241,,LOẠI TÀI KHOẢN TÀI SẢN,1
+2414,"Nâng cấp, cải tạo TSCĐ",2,241,,LOẠI TÀI KHOẢN TÀI SẢN,1
+242,Chi phí chờ phân bổ,1,,31,LOẠI TÀI KHOẢN TÀI SẢN,1
+243,Tài sản thuế thu nhập hoãn lại,1,,32,LOẠI TÀI KHOẢN TÀI SẢN,1
+244,"Ký quỹ, ký cược",1,,33,LOẠI TÀI KHOẢN TÀI SẢN,1
+331,Phải trả cho người bán,1,,34,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+332,"Phải trả cổ tức, lợi nhuận",1,,35,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+333,Thuế và các khoản phải nộp Nhà nước,1,,36,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,0
+3331,Thuế giá trị gia tăng phải nộp,2,333,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,0
+33311,Thuế GTGT đầu ra,3,3331,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+33312,Thuế GTGT hàng nhập khẩu,3,3331,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3332,Thuế tiêu thụ đặc biệt,2,333,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3333,"Thuế xuất, nhập khẩu",2,333,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3334,Thuế thu nhập doanh nghiệp,2,333,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3335,Thuế thu nhập cá nhân,2,333,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3336,Thuế tài nguyên,2,333,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3337,"Thuế nhà đất, tiền thuê đất",2,333,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3338,Thuế bảo vệ môi trường và các loại thuế khác,2,333,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,0
+33381,Thuế bảo vệ môi trường,3,3338,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+33382,Các loại thuế khác,3,3338,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3339,"Phí, lệ phí và các khoản phải nộp khác",2,333,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+334,Phải trả người lao động,1,,37,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+335,Chi phí phải trả,1,,38,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+336,Phải trả nội bộ,1,,39,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,0
+3361,Phải trả nội bộ về vốn kinh doanh,2,336,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3362,Phải trả nội bộ về chênh lệch tỷ giá,2,336,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3363,Phải trả nội bộ về chi phí đi vay đủ điều kiện được vốn hóa,2,336,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3368,Phải trả nội bộ khác,2,336,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+337,Thanh toán theo tiến độ hợp đồng xây dựng,1,,40,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+338,"Phải trả, phải nộp khác",1,,41,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,0
+3381,Tài sản thừa chờ giải quyết,2,338,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3382,Kinh phí công đoàn,2,338,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3383,Bảo hiểm xã hội,2,338,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3384,Bảo hiểm y tế,2,338,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3386,Bảo hiểm thất nghiệp,2,338,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3387,Doanh thu chờ phân bổ,2,338,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3388,"Phải trả, phải nộp khác",2,338,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+341,Vay và nợ thuê tài chính,1,,42,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,0
+3411,Các khoản đi vay,2,341,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3412,Nợ thuê tài chính,2,341,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+343,Trái phiếu phát hành,1,,43,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,0
+3431,Trái phiếu thường,2,343,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3432,Trái phiếu chuyển đổi,2,343,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+344,"Nhận ký quỹ, ký cược",1,,44,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+347,Thuế thu nhập hoãn lại phải trả,1,,45,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+352,Dự phòng phải trả,1,,46,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,0
+3521,"Dự phòng bảo hành sản phẩm, hàng hóa",2,352,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3522,Dự phòng bảo hành công trình xây dựng,2,352,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3523,Dự phòng tái cơ cấu doanh nghiệp,2,352,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3525,Dự phòng phải trả khác,2,352,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+353,"Quỹ khen thưởng, phúc lợi",1,,47,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,0
+3531,Quỹ khen thưởng,2,353,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3532,Quỹ phúc lợi,2,353,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3533,Quỹ phúc lợi đã hình thành TSCĐ,2,353,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3534,Quỹ thưởng ban quản lý điều hành công ty,2,353,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+356,Quỹ phát triển khoa học và công nghệ,1,,48,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,0
+3561,Quỹ phát triển khoa học và công nghệ,2,356,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+3562,Quỹ phát triển khoa học và công nghệ đã hình thành tài sản,2,356,,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+357,Quỹ bình ổn giá,1,,49,LOẠI TÀI KHOẢN NỢ PHẢI TRẢ,1
+411,Vốn đầu tư của chủ sở hữu,1,,50,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,0
+4111,Vốn góp của chủ sở hữu,2,411,,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,0
+41111,Cổ phiếu phổ thông có quyền biểu quyết,3,4111,,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,1
+41112,Cổ phiếu ưu đãi,3,4111,,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,1
+4112,Thặng dư vốn,2,411,,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,1
+4113,Quyền chọn chuyển đổi trái phiếu,2,411,,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,1
+4118,Vốn khác,2,411,,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,1
+412,Chênh lệch đánh giá lại tài sản,1,,51,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,1
+413,Chênh lệch tỷ giá hối đoái,1,,52,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,1
+414,Quỹ đầu tư phát triển,1,,53,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,1
+418,Các quỹ khác thuộc vốn chủ sở hữu,1,,54,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,1
+419,Cổ phiếu mua lại của chính mình,1,,55,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,1
+421,Lợi nhuận sau thuế chưa phân phối,1,,56,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,0
+4211,Lợi nhuận sau thuế chưa phân phối lũy kế đến cuối năm trước,2,421,,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,1
+4212,Lợi nhuận sau thuế chưa phân phối năm nay,2,421,,LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU,1
+511,Doanh thu bán hàng và cung cấp dịch vụ,1,,57,LOẠI TÀI KHOẢN DOANH THU,1
+515,Doanh thu hoạt động tài chính,1,,58,LOẠI TÀI KHOẢN DOANH THU,1
+521,Các khoản giảm trừ doanh thu,1,,59,LOẠI TÀI KHOẢN DOANH THU,1
+621,"Chi phí nguyên liệu, vật liệu trực tiếp",1,,60,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+622,Chi phí nhân công trực tiếp,1,,61,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+623,Chi phí sử dụng máy thi công,1,,62,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",0
+6231,Chi phí nhân công,2,623,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6232,Chi phí vật liệu,2,623,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6233,Chi phí dụng cụ sản xuất,2,623,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6234,Chi phí khấu hao máy thi công,2,623,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6237,Chi phí dịch vụ mua ngoài,2,623,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6238,Chi phí bằng tiền khác,2,623,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+627,Chi phí sản xuất chung,1,,63,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",0
+6271,Chi phí nhân viên phân xưởng,2,627,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6272,Chi phí vật liệu,2,627,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6273,Chi phí dụng cụ sản xuất,2,627,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6274,Chi phí khấu hao TSCĐ,2,627,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6275,"Thuế, phí, lệ phí",2,627,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6277,Chi phí dịch vụ mua ngoài,2,627,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6278,Chi phí bằng tiền khác,2,627,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+632,Giá vốn hàng bán,1,,64,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+635,Chi phí tài chính,1,,65,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+641,Chi phí bán hàng,1,,66,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",0
+6411,Chi phí nhân viên,2,641,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6412,"Chi phí vật liệu, bao bì",2,641,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6413,"Chi phí dụng cụ, đồ dùng",2,641,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6414,Chi phí khấu hao TSCĐ,2,641,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6415,"Thuế, phí, lệ phí",2,641,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6417,Chi phí dịch vụ mua ngoài,2,641,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6418,Chi phí bằng tiền khác,2,641,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+642,Chi phí quản lý doanh nghiệp,1,,67,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",0
+6421,Chi phí nhân viên quản lý,2,642,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6422,Chi phí vật liệu quản lý,2,642,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6423,Chi phí đồ dùng văn phòng,2,642,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6424,Chi phí khấu hao TSCĐ,2,642,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6425,"Thuế, phí và lệ phí",2,642,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6426,Chi phí dự phòng,2,642,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6427,Chi phí dịch vụ mua ngoài,2,642,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+6428,Chi phí bằng tiền khác,2,642,,"LOẠI TÀI KHOẢN CHI PHÍ SẢN XUẤT, KINH DOANH",1
+711,Thu nhập khác,1,,68,LOẠI TÀI KHOẢN THU NHẬP KHÁC,1
+811,Chi phí khác,1,,69,LOẠI TÀI KHOẢN CHI PHÍ KHÁC,1
+821,Chi phí thuế thu nhập doanh nghiệp,1,,70,LOẠI TÀI KHOẢN CHI PHÍ KHÁC,0
+8211,Chi phí thuế TNDN hiện hành,2,821,,LOẠI TÀI KHOẢN CHI PHÍ KHÁC,0
+82111,Chi phí thuế thu nhập doanh nghiệp hiện hành theo quy định của Luật thuế thu nhập doanh nghiệp,3,8211,,LOẠI TÀI KHOẢN CHI PHÍ KHÁC,1
+82112,Chi phí thuế thu nhập doanh nghiệp bổ sung theo quy định về thuế tối thiểu toàn cầu,3,8211,,LOẠI TÀI KHOẢN CHI PHÍ KHÁC,1
+8212,Chi phí thuế TNDN hoãn lại,2,821,,LOẠI TÀI KHOẢN CHI PHÍ KHÁC,1
+911,Xác định kết quả kinh doanh,1,,71,TÀI KHOẢN XÁC ĐỊNH KẾT QUẢ KINH DOANH,1
