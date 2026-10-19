@@ -9,11 +9,21 @@ using System.Web.UI.WebControls;
 namespace ReportingModule.Web
 {
  [Serializable] public sealed class OutputColumn { public string Field,Title,Format; public OutputColumn(string field,string title,string format="") { Field=field;Title=title;Format=format; } }
+ [Serializable] public sealed class VoucherModel
+ {
+  public string UnitCode,UnitName,UnitAddress,UnitTaxCode,UnitRepresentative,DocumentType,Title,DocumentNumber,DocumentStatus,DocumentNote;
+  public string PartnerCode,PartnerName,PartnerAddress,PartnerLabel,DeliveryPerson,WarehouseCode,TotalLabel,Total,AmountInWords;
+  public DateTime DocumentDate;
+  public DataTable Lines;
+  public OutputColumn[] Columns;
+  public string[] SignatureLabels;
+  public bool Landscape;
+ }
  [Serializable] public sealed class OutputSnapshot
  {
   public string Screen,Title,Criteria,Summary,SourceUrl,UnitCode;
   public string DocumentNumber,DocumentStatus,DocumentNote,PartnerCode,PartnerName,PartnerAddress,PartnerLabel,UnitName,UnitLegalName,UnitAddress,UnitTaxCode,UnitRepresentative,DeliveryPerson,WarehouseCode,DocumentTotal,DocumentTotalLabel,AmountInWords;
-  public DateTime Created,DocumentDate; public DataTable Data; public OutputColumn[] Columns;
+  public DateTime Created,DocumentDate; public DataTable Data; public OutputColumn[] Columns; public VoucherModel Voucher;
   public string Text(DataRow row,OutputColumn c) { object v=row[c.Field]; if(v==DBNull.Value) return ""; return string.IsNullOrEmpty(c.Format)?Convert.ToString(v,CultureInfo.GetCultureInfo("vi-VN")):string.Format(CultureInfo.GetCultureInfo("vi-VN"),c.Format,v); }
  }
  public static class ReportOutput
@@ -76,12 +86,19 @@ namespace ReportingModule.Web
    string partnerAddress=header.Table.Columns.Contains("DiaChiDoiTac")&&header["DiaChiDoiTac"]!=DBNull.Value?Convert.ToString(header["DiaChiDoiTac"]):"";
    string unitName=header.Table.Columns.Contains("TenPhapLy")&&header["TenPhapLy"]!=DBNull.Value&&!string.IsNullOrWhiteSpace(Convert.ToString(header["TenPhapLy"]))?Convert.ToString(header["TenPhapLy"]):header.Table.Columns.Contains("TenDonVi")?Convert.ToString(header["TenDonVi"]):"";
    decimal totalAmount=lines.Columns.Contains("ThanhTien")?lines.Rows.Cast<DataRow>().Sum(r=>r["ThanhTien"]==DBNull.Value?0m:Convert.ToDecimal(r["ThanhTien"])):0m;
-   return Capture(new HttpSessionStateWrapper(context.Session),new OutputSnapshot { Screen=screen,Title=screen=="purchase-receipt"?"Phiếu nhập mua":node.Title,Criteria=criteria,Summary=summary,Data=lines,UnitCode=Convert.ToString(header["MaDonVi"]),
+   string displayTitle=screen=="purchase-receipt"?"Phiếu nhập mua":node.Title;
+   string legalAddress=header.Table.Columns.Contains("DiaChiDonVi")?Convert.ToString(header["DiaChiDonVi"]):"";
+   string taxCode=header.Table.Columns.Contains("MaSoThue")?Convert.ToString(header["MaSoThue"]):"";
+   string representative=header.Table.Columns.Contains("NguoiDaiDien")?Convert.ToString(header["NguoiDaiDien"]):"";
+   string sender=header.Table.Columns.Contains("NguoiGiaoHang")?Convert.ToString(header["NguoiGiaoHang"]):"";
+   string warehouseCode=header.Table.Columns.Contains("MaKho")?Convert.ToString(header["MaKho"]):"";
+   var columns=(screen=="purchase-receipt"?new[]{"MaKho","MaHang","TenHang","DonViTinh","SoLuong","DonGia","ThanhTien"}:lines.Columns.Cast<DataColumn>().Where(c=>titles.ContainsKey(c.ColumnName)).Select(c=>c.ColumnName).ToArray()).Select(f=>new OutputColumn(f,titles[f],f=="SoLuong"?"{0:N2}":f=="DonGia"?"{0:N4}":f=="ThanhTien"?"{0:N0}":lines.Columns[f].DataType==typeof(decimal)?"{0:N4}":"")).ToArray();
+   var voucher=new VoucherModel { UnitCode=Convert.ToString(header["MaDonVi"]),UnitName=unitName,UnitAddress=legalAddress,UnitTaxCode=taxCode,UnitRepresentative=representative,DocumentType=screen,Title=displayTitle,DocumentDate=(DateTime)header["Ngay"],DocumentNumber=number,DocumentStatus=Convert.ToString(header["TrangThai"]),DocumentNote=Convert.ToString(header["DienGiai"]),PartnerCode=partner,PartnerName=partnerName,PartnerAddress=partnerAddress,PartnerLabel=partnerLabel,DeliveryPerson=sender,WarehouseCode=warehouseCode,TotalLabel=screen=="purchase-receipt"?"Tổng cộng":lines.Columns.Contains("PhatSinhNo")?"Tổng Nợ / Có":"Tổng tiền hàng",Total=total,AmountInWords=screen=="purchase-receipt"?NumberToWords.Vietnamese(totalAmount):"",Lines=lines.Copy(),Columns=columns,SignatureLabels=SignatureLabels(screen),Landscape=true };
+   return Capture(new HttpSessionStateWrapper(context.Session),new OutputSnapshot { Screen=screen,Title=displayTitle,Criteria=criteria,Summary=summary,Data=lines,UnitCode=Convert.ToString(header["MaDonVi"]),Voucher=voucher,
     DocumentNumber=number,DocumentDate=(DateTime)header["Ngay"],DocumentStatus=Convert.ToString(header["TrangThai"]),DocumentNote=Convert.ToString(header["DienGiai"]),PartnerCode=partner,DocumentTotal=total,
     UnitName=unitName,UnitLegalName=unitName,UnitAddress=header.Table.Columns.Contains("DiaChiDonVi")?Convert.ToString(header["DiaChiDonVi"]):"",UnitTaxCode=header.Table.Columns.Contains("MaSoThue")?Convert.ToString(header["MaSoThue"]):"",UnitRepresentative=header.Table.Columns.Contains("NguoiDaiDien")?Convert.ToString(header["NguoiDaiDien"]):"",
-    DeliveryPerson=header.Table.Columns.Contains("NguoiGiaoHang")?Convert.ToString(header["NguoiGiaoHang"]):"",WarehouseCode=header.Table.Columns.Contains("MaKho")?Convert.ToString(header["MaKho"]):"",PartnerName=partnerName,PartnerAddress=partnerAddress,PartnerLabel=partnerLabel,
-    DocumentTotalLabel=screen=="purchase-receipt"?"Tổng cộng":lines.Columns.Contains("PhatSinhNo")?"Tổng Nợ / Có":"Tổng tiền hàng",AmountInWords=screen=="purchase-receipt"?NumberToWords.Vietnamese(totalAmount):"",
-    Columns=(screen=="purchase-receipt"?new[]{"MaKho","MaHang","TenHang","DonViTinh","SoLuong","DonGia","ThanhTien"}:lines.Columns.Cast<DataColumn>().Where(c=>titles.ContainsKey(c.ColumnName)).Select(c=>c.ColumnName).ToArray()).Select(f=>new OutputColumn(f,titles[f],f=="SoLuong"?"{0:N2}":f=="DonGia"?"{0:N4}":f=="ThanhTien"?"{0:N0}":lines.Columns[f].DataType==typeof(decimal)?"{0:N4}":"")).ToArray() });
+    DeliveryPerson=sender,WarehouseCode=warehouseCode,PartnerName=partnerName,PartnerAddress=partnerAddress,PartnerLabel=partnerLabel,
+    DocumentTotalLabel=voucher.TotalLabel,AmountInWords=voucher.AmountInWords,Columns=columns });
   }
   public static string Html(OutputSnapshot s)
   {
@@ -99,7 +116,7 @@ namespace ReportingModule.Web
   }
   private static string DocumentHtml(OutputSnapshot s)
   {
-   if(s.Screen=="purchase-receipt") return PurchaseReceiptHtml(s);
+   if(s.Screen=="purchase-receipt") return PurchaseReceiptHtml(s.Voucher??FromSnapshot(s));
    Func<string,string> h=HttpUtility.HtmlEncode; var b=new StringBuilder("<article class=\"voucher-print\"><header class=\"voucher-brand\"><strong>").Append(h(s.UnitLegalName??s.UnitName));
    if(!string.IsNullOrWhiteSpace(s.UnitAddress)) b.Append("<span>").Append(h(s.UnitAddress)).Append("</span>"); if(!string.IsNullOrWhiteSpace(s.UnitTaxCode))b.Append("<span>Mã số thuế: ").Append(h(s.UnitTaxCode)).Append("</span>");b.Append("</header>");
    b.Append("<h1>").Append(h(s.Title)).Append("</h1><div class=\"voucher-date\">Ngày ").Append(s.DocumentDate.ToString("dd 'tháng' MM 'năm' yyyy",CultureInfo.GetCultureInfo("vi-VN"))).Append("</div><div class=\"voucher-meta\"><div><b>Số chứng từ</b><span>").Append(h(s.DocumentNumber)).Append("</span></div><div><b>Ngày chứng từ</b><span>").Append(s.DocumentDate.ToString("dd/MM/yyyy")).Append("</span></div><div><b>Đơn vị</b><span>").Append(h(s.UnitName)).Append(" (").Append(h(s.UnitCode)).Append(")</span></div>");
@@ -118,18 +135,31 @@ namespace ReportingModule.Web
    b.Append("<div class=\"voucher-signatures\">"); foreach(string label in signatures) b.Append("<div><b>").Append(h(label)).Append("</b><span>(Ký, họ tên)</span></div>"); b.Append("</div></article>");
    return b.ToString();
   }
-  private static string PurchaseReceiptHtml(OutputSnapshot s)
+  public static VoucherModel FromSnapshot(OutputSnapshot s)
   {
-   Func<string,string> h=HttpUtility.HtmlEncode;var b=new StringBuilder("<article class=\"voucher-print purchase-voucher\"><header class=\"voucher-brand\"><strong>").Append(h(s.UnitLegalName??s.UnitName)).Append("</strong>");
+   return s.Voucher??new VoucherModel { UnitCode=s.UnitCode,UnitName=s.UnitLegalName??s.UnitName,UnitAddress=s.UnitAddress,UnitTaxCode=s.UnitTaxCode,UnitRepresentative=s.UnitRepresentative,DocumentType=s.Screen,Title=s.Title,DocumentDate=s.DocumentDate,DocumentNumber=s.DocumentNumber,DocumentStatus=s.DocumentStatus,DocumentNote=s.DocumentNote,PartnerCode=s.PartnerCode,PartnerName=s.PartnerName,PartnerAddress=s.PartnerAddress,PartnerLabel=s.PartnerLabel,DeliveryPerson=s.DeliveryPerson,WarehouseCode=s.WarehouseCode,TotalLabel=s.DocumentTotalLabel,Total=s.DocumentTotal,AmountInWords=s.AmountInWords,Lines=s.Data,Columns=s.Columns,SignatureLabels=SignatureLabels(s.Screen),Landscape=true };
+  }
+  internal static void ApplyVoucherModel(OutputSnapshot s)
+  {
+   var v=FromSnapshot(s);if(v==null)return;
+   s.Title=v.Title;s.DocumentDate=v.DocumentDate;s.DocumentNumber=v.DocumentNumber;s.DocumentStatus=v.DocumentStatus;s.DocumentNote=v.DocumentNote;
+   s.UnitCode=v.UnitCode;s.UnitName=s.UnitLegalName=v.UnitName;s.UnitAddress=v.UnitAddress;s.UnitTaxCode=v.UnitTaxCode;s.UnitRepresentative=v.UnitRepresentative;
+   s.PartnerCode=v.PartnerCode;s.PartnerName=v.PartnerName;s.PartnerAddress=v.PartnerAddress;s.PartnerLabel=v.PartnerLabel;
+   s.DeliveryPerson=v.DeliveryPerson;s.WarehouseCode=v.WarehouseCode;s.DocumentTotal=v.Total;s.DocumentTotalLabel=v.TotalLabel;s.AmountInWords=v.AmountInWords;
+   s.Data=v.Lines;s.Columns=v.Columns;
+  }
+  private static string PurchaseReceiptHtml(VoucherModel s)
+  {
+   Func<string,string> h=HttpUtility.HtmlEncode;var b=new StringBuilder("<article class=\"voucher-print purchase-voucher\"><header class=\"voucher-brand\"><strong>").Append(h(s.UnitName)).Append("</strong>");
    if(!string.IsNullOrWhiteSpace(s.UnitAddress))b.Append("<span>").Append(h(s.UnitAddress)).Append("</span>");if(!string.IsNullOrWhiteSpace(s.UnitTaxCode))b.Append("<span>Mã số thuế: ").Append(h(s.UnitTaxCode)).Append("</span>");
-   b.Append("</header><h1>PHIẾU NHẬP MUA</h1><div class=\"voucher-date\">Ngày ").Append(s.DocumentDate.ToString("dd 'tháng' MM 'năm' yyyy",CultureInfo.GetCultureInfo("vi-VN"))).Append("</div><div class=\"voucher-meta\"><div><b>Số phiếu</b><span>").Append(h(s.DocumentNumber)).Append("</span></div>");
+   b.Append("</header><h1>").Append(h(s.Title.ToUpperInvariant())).Append("</h1><div class=\"voucher-date\">Ngày ").Append(s.DocumentDate.ToString("dd 'tháng' MM 'năm' yyyy",CultureInfo.GetCultureInfo("vi-VN"))).Append("</div><div class=\"voucher-meta\"><div><b>Số phiếu</b><span>").Append(h(s.DocumentNumber)).Append("</span></div>");
    if(!string.IsNullOrWhiteSpace(s.DeliveryPerson))b.Append("<div><b>Người giao hàng</b><span>").Append(h(s.DeliveryPerson)).Append("</span></div>");if(!string.IsNullOrWhiteSpace(s.PartnerName))b.Append("<div><b>Đơn vị</b><span>").Append(h(s.PartnerName)).Append("</span></div>");
    if(!string.IsNullOrWhiteSpace(s.PartnerAddress))b.Append("<div><b>Địa chỉ</b><span>").Append(h(s.PartnerAddress)).Append("</span></div>");if(!string.IsNullOrWhiteSpace(s.DocumentNote))b.Append("<div><b>Diễn giải</b><span>").Append(h(s.DocumentNote)).Append("</span></div>");
    b.Append("</div><table class=\"voucher-lines\"><thead><tr><th>STT</th>");foreach(var c in s.Columns)b.Append("<th>").Append(h(c.Title)).Append("</th>");b.Append("</tr></thead><tbody>");
-   int i=0;foreach(DataRow row in s.Data.Rows){b.Append("<tr><td>").Append(++i).Append("</td>");foreach(var c in s.Columns){object v=row[c.Field];string t=v==DBNull.Value?"":c.Field=="SoLuong"?Convert.ToDecimal(v).ToString("N2",CultureInfo.GetCultureInfo("vi-VN")):c.Field=="DonGia"?Convert.ToDecimal(v).ToString("N4",CultureInfo.GetCultureInfo("vi-VN")):c.Field=="ThanhTien"?Convert.ToDecimal(v).ToString("N0",CultureInfo.GetCultureInfo("vi-VN")):s.Text(row,c);b.Append(c.Field=="SoLuong"||c.Field=="DonGia"||c.Field=="ThanhTien"?"<td class=\"numeric\">":"<td>").Append(h(t)).Append("</td>");}b.Append("</tr>");}
+   int i=0;foreach(DataRow row in s.Lines.Rows){b.Append("<tr><td>").Append(++i).Append("</td>");foreach(var c in s.Columns){object v=row[c.Field];string t=v==DBNull.Value?"":c.Field=="SoLuong"?Convert.ToDecimal(v).ToString("N2",CultureInfo.GetCultureInfo("vi-VN")):c.Field=="DonGia"?Convert.ToDecimal(v).ToString("N4",CultureInfo.GetCultureInfo("vi-VN")):c.Field=="ThanhTien"?Convert.ToDecimal(v).ToString("N0",CultureInfo.GetCultureInfo("vi-VN")):Convert.ToString(v,CultureInfo.GetCultureInfo("vi-VN"));b.Append(c.Field=="SoLuong"||c.Field=="DonGia"||c.Field=="ThanhTien"?"<td class=\"numeric\">":"<td>").Append(h(t)).Append("</td>");}b.Append("</tr>");}
    for(;i<10;i++){b.Append("<tr class=\"voucher-blank\"><td>").Append(i+1).Append("</td>");foreach(var c in s.Columns)b.Append("<td>&nbsp;</td>");b.Append("</tr>");}
-   decimal total=s.Data.Rows.Cast<DataRow>().Sum(r=>r["ThanhTien"]==DBNull.Value?0m:Convert.ToDecimal(r["ThanhTien"]));b.Append("<tr class=\"voucher-total-row\"><td colspan=\"").Append(s.Columns.Length).Append("\">Tổng cộng</td><td class=\"numeric\">").Append(total.ToString("N0",CultureInfo.GetCultureInfo("vi-VN"))).Append("</td></tr></tbody></table><p class=\"voucher-words\"><i>Số tiền viết bằng chữ: ").Append(h(s.AmountInWords)).Append("</i></p><p class=\"voucher-sign-date\">Ngày……tháng……năm…………</p><div class=\"voucher-signatures\">");
-   foreach(string label in new[]{"Người giao hàng","PT nhập hàng","Người nhận hàng","Thủ kho"})b.Append("<div><b>").Append(h(label)).Append("</b><span><i>(Ký, họ tên)</i></span></div>");return b.Append("</div></article>").ToString();
+   decimal total=s.Lines.Rows.Cast<DataRow>().Sum(r=>r["ThanhTien"]==DBNull.Value?0m:Convert.ToDecimal(r["ThanhTien"]));b.Append("<tr class=\"voucher-total-row\"><td colspan=\"").Append(s.Columns.Length).Append("\">Tổng cộng</td><td class=\"numeric\">").Append(total.ToString("N0",CultureInfo.GetCultureInfo("vi-VN"))).Append("</td></tr></tbody></table><p class=\"voucher-words\"><i>Số tiền viết bằng chữ: ").Append(h(s.AmountInWords)).Append("</i></p><p class=\"voucher-sign-date\">Ngày……tháng……năm…………</p><div class=\"voucher-signatures\">");
+   foreach(string label in s.SignatureLabels)b.Append("<div><b>").Append(h(label)).Append("</b><span><i>(Ký, họ tên)</i></span></div>");return b.Append("</div></article>").ToString();
   }
  }
 }

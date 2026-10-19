@@ -81,6 +81,7 @@ namespace ReportingModule.Web
   { var cell=Cell(address,value,date); if(style>0) cell.SetAttributeValue("s",style); return cell; }
   private static byte[] ExportVoucher(OutputSnapshot s)
   {
+   if(s.Screen=="purchase-receipt") ReportOutput.ApplyVoucherModel(s);
    if(s.Data.Rows.Count>5000) throw new ArgumentException("Kết xuất tối đa 5000 dòng.");
    int columnCount=Math.Max(5,s.Columns.Length+1);string last=Column(columnCount-1);
    var rows=new List<XElement>();

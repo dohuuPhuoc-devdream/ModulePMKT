@@ -66,6 +66,7 @@ namespace ReportingModule.Web
   }
   private static byte[] ExportVoucher(OutputSnapshot s)
   {
+   if(s.Screen=="purchase-receipt") ReportOutput.ApplyVoucherModel(s);
    const int w=1754,h=1240,margin=84,bottom=1080; var pages=new List<byte[]>(); float y=0;
    string face=s.Screen=="purchase-receipt"?"Times New Roman":"Arial";
    using(var regular=new Font(face,20,FontStyle.Regular,GraphicsUnit.Pixel))

@@ -11,7 +11,7 @@
 - Thanh toán từng hóa đơn; báo cáo công nợ khách hàng/nhà cung cấp.
 - Phiếu kế toán thủ công và bảng cân đối đại diện với hệ tài khoản thực hành.
 - 11 báo cáo truy vấn SQL thực; Print/PDF/Excel từ toàn bộ kết quả theo điều kiện đã áp dụng.
-- Phiếu nhập mua có mẫu in riêng và mẫu Excel có công thức tổng tiền, kho, người giao hàng, thông tin đối tác và số tiền bằng chữ.
+- Phiếu nhập mua có model chứng từ dùng chung cho HTML/PDF/Excel và mẫu Excel có công thức tổng tiền, kho, người giao hàng, thông tin đối tác và số tiền bằng chữ. PDF hiện vẫn là ảnh, chưa tìm kiếm/chọn được văn bản.
 
 ## Chuẩn bị và chạy
 
