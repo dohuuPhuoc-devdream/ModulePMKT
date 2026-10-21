@@ -15,6 +15,11 @@ IF NOT EXISTS(SELECT 1 FROM dbo.TonDauKy WHERE MaDonVi='DVDEMO' AND MaHang='HANG
 IF (SELECT COUNT(*) FROM dbo.HangHoa WHERE MaHang LIKE 'HANG00%' OR MaHang='HANG010')<10 THROW 51103,'Item seed missing.',1;
 IF (SELECT COUNT(*) FROM dbo.KhachHang WHERE MaKH LIKE 'KHDEMO%')<5 THROW 51104,'Customer seed missing.',1;
 IF (SELECT COUNT(*) FROM dbo.NhaCungCap WHERE MaNCC LIKE 'NCCDEMO%')<5 THROW 51105,'Supplier seed missing.',1;
+IF NOT EXISTS(SELECT 1 FROM dbo.DonVi WHERE MaDonVi='DVDEMO' AND TenDonVi=N'Công ty TNHH PicoCorp') THROW 51108,'Demo unit display name is not updated.',1;
+IF NOT EXISTS(SELECT 1 FROM dbo.KhachHang WHERE MaKH='KHDEMO001' AND TenKH=N'Công ty TNHH Minh Phát') THROW 51109,'Demo customer names are not updated.',1;
+IF NOT EXISTS(SELECT 1 FROM dbo.NhaCungCap WHERE MaNCC='NCCDEMO001' AND TenNCC=N'Công ty TNHH Vật tư Hòa Bình') THROW 51110,'Demo supplier names are not updated.',1;
+IF NOT EXISTS(SELECT 1 FROM dbo.HangHoa WHERE MaHang='HANG001' AND TenHang=N'Thùng carton 5 lớp 40 x 30 x 30 cm' AND DonViTinh=N'Cái') THROW 51111,'Demo item names are not updated.',1;
+IF EXISTS(SELECT 1 FROM dbo.TaiKhoan WHERE MaTK='TS_KH' AND TenTK=N'Phải thu') THROW 51112,'Teaching account display name is not updated.',1;
 IF EXISTS(SELECT 1 FROM sys.foreign_keys WHERE is_disabled=1 OR is_not_trusted=1) THROW 51106,'Untrusted FK.',1;
 IF EXISTS(SELECT 1 FROM sys.check_constraints WHERE is_disabled=1 OR is_not_trusted=1) THROW 51107,'Untrusted check constraint.',1;
 PRINT 'PASS: version, seed counts, HANG001 opening 100, trusted constraints.';

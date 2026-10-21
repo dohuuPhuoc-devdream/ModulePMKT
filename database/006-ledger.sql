@@ -11,9 +11,11 @@ IF NOT EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version=4) THROW 51500,'Sche
 IF OBJECT_ID('dbo.TaiKhoanBaoCao','U') IS NULL
  CREATE TABLE dbo.TaiKhoanBaoCao(MaTK varchar(20) PRIMARY KEY REFERENCES dbo.TaiKhoan(MaTK),Nhom char(1) NOT NULL CHECK(Nhom IN ('A','L','E')),ThuTu int NOT NULL UNIQUE);
 -- Internal teaching chart, not a statutory chart or FAST format. No company balances.
-DECLARE @Accounts TABLE(Ma varchar(20),Ten nvarchar(200),Nhom char(1),ThuTu int);
-INSERT @Accounts VALUES('TS_TIEN',N'Tiền','A',1),('TS_KH',N'Phải thu','A',2),('TS_HANG',N'Hàng tồn kho','A',3),('NV_NCC',N'Phải trả','L',1+100),('NV_VON',N'Vốn góp','E',201),('NV_LN',N'Kết quả tích lũy','E',202);
-IF EXISTS(SELECT 1 FROM @Accounts a JOIN dbo.TaiKhoan t ON t.MaTK=a.Ma WHERE t.TenTK<>a.Ten)
+DECLARE @Accounts TABLE(Ma varchar(20),Ten nvarchar(200),TenCu nvarchar(200),Nhom char(1),ThuTu int);
+INSERT @Accounts VALUES
+ ('TS_TIEN',N'Tiền mặt và tiền gửi ngân hàng',N'Tiền','A',1),('TS_KH',N'Phải thu khách hàng',N'Phải thu','A',2),('TS_HANG',N'Hàng tồn kho',N'Hàng tồn kho','A',3),
+ ('NV_NCC',N'Phải trả nhà cung cấp',N'Phải trả','L',101),('NV_VON',N'Vốn góp của chủ sở hữu',N'Vốn góp','E',201),('NV_LN',N'Lợi nhuận sau thuế chưa phân phối',N'Kết quả tích lũy','E',202);
+IF EXISTS(SELECT 1 FROM @Accounts a JOIN dbo.TaiKhoan t ON t.MaTK=a.Ma WHERE t.TenTK NOT IN(a.Ten,a.TenCu))
  THROW 51500,'Existing teaching account code has a different name; no overwrite.',1;
 INSERT dbo.TaiKhoan(MaTK,TenTK) SELECT Ma,Ten FROM @Accounts a WHERE NOT EXISTS(SELECT 1 FROM dbo.TaiKhoan t WHERE t.MaTK=a.Ma);
 IF EXISTS(SELECT 1 FROM @Accounts a JOIN dbo.TaiKhoanBaoCao m ON m.MaTK=a.Ma WHERE m.Nhom<>a.Nhom OR m.ThuTu<>a.ThuTu)

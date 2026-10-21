@@ -1,6 +1,8 @@
-Current state: setup applies migrations through 011-stock-warehouse-slip.sql (schema version 10). Inventory, commerce, payments, manual ledger, authentication, permissions, unit access, legal unit profile fields, user default units and one default warehouse per unit are implemented. The phase notes below retain schema history; see ../README.md for current application setup.
+Current state: setup applies migrations through 012-demo-display-names.sql (schema version 11). Inventory, commerce, payments, manual ledger, authentication, permissions, unit access, legal unit profile fields, user default units and one default warehouse per unit are implemented. The phase notes below retain schema history; see ../README.md for current application setup.
 
-Migration 010 adds optional legal profile fields to `DonVi` and a single default assigned working unit to `AppUserUnit`. Migration 011 adds `Kho`, seeds `KHO01` per unit (including units created later), and adds voucher-level `MaKho` and `NguoiGiaoHang` fields. No company legal values are seeded. `SaveStockDocument` validates that a selected purchase-receipt warehouse belongs to the document unit.
+Migration 010 adds optional legal profile fields to `DonVi` and a single default assigned working unit to `AppUserUnit`. Migration 011 adds `Kho`, seeds `KHO01` per unit (including units created later), and adds voucher-level `MaKho` and `NguoiGiaoHang` fields. `SaveStockDocument` validates that a selected purchase-receipt warehouse belongs to the document unit.
+
+Migration 012 replaces generic seed labels with natural, synthetic display names for the `DVDEMO` unit, its five demo customers and suppliers, ten items, and six internal teaching accounts. Existing item/partner/unit/account codes and all balances are preserved. It changes only rows still carrying the original generated placeholder name. No tax identifiers or real contact details are invented.
 
 # SQL Server schema and synthetic seed
 
@@ -116,17 +118,17 @@ Thông tư 99/2025/TT-BTC PDF](https://congbao.chinhphu.vn/tai-ve-van-ban-so-99-
 
 The supplied CSV columns are `MaTK, TenTK, Cap, MaTKCha, SoTTCap1,
 LoaiTaiKhoan, LaTaiKhoanLa`. It does **not** contain the normal-balance
-classification (`N`, `C`, or `L`) required by migration 012. Do not derive that
+classification (`N`, `C`, or `L`) required by a future TT99 import migration. Do not derive that
 accounting property from `LoaiTaiKhoan`: contra accounts and accounts that can
-carry either balance would be misclassified. Account import/migration 012 is
+carry either balance would be misclassified. TT99 account import is
 therefore pending an authoritative source column or an approved mapping. The
 CSV is staged as source data only; it has not yet been loaded into `TaiKhoan`.
 
 ## Seed
 
-One clearly labeled demo unit, 10 generic synthetic items, five synthetic
-customers and five synthetic suppliers. Tax IDs, addresses and phone numbers are
-left null in the pristine baseline. HANG001 opens at 100, other items at 0.
+One demo unit, ten named synthetic items, five synthetic customers and five
+synthetic suppliers. Tax IDs and external contact details remain blank unless
+provided. HANG001 opens at 100, other items at 0.
 No receipts, issues, invoices, journal entries or report results are seeded.
 Phase 4 acceptance creates PN001 +50 and PX001 -20 through the actual write path,
 verifies 130, and rejects issue 200 atomically. The Phase 3–9 regression run and
@@ -138,6 +140,12 @@ practice address `Số 01, Đường Mẫu, Phường An Khánh, Thành phố H�
 Tax ID, representative, phone and email remain blank because no verified values
 were provided. This local-only update does not change the seed or migration
 history; it is not a verified legal identity.
+
+On 2026-10-21, migration 012 replaced the generic local seed labels with the
+synthetic names above while retaining all codes and balances. Orphaned P3 test
+catalog rows were removed after checking references. Two other test-unit names
+and one generic customer name were updated in the local database only because
+they had linked test records; identifiers and those records were preserved.
 
 ## Phase 5 upgrade
 setup.sql includes 004-commerce.sql (schema version 3), 008-purchase-workflow.sql (version 7), and 009-purchase-receipt-invoice-uniqueness.sql (version 8). Sales invoices create one linked warehouse issue. Purchase receipts carry supplier and change stock; each receipt can be referenced by at most one purchase invoice, and invoices do not change stock again. Orders do not affect stock. See [Phase 5 defaults](../docs/PHASE5.md). Existing demo stock documents are preserved; legacy combined purchase facts are linked by migration without replaying their stock effect.

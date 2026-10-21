@@ -26,7 +26,7 @@ sqlcmd -S '.\SQLEXPRESS' -E -C -b -l 10 -f 65001 -i database/setup.sql
 & 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe' ReportingModule.sln /t:Build /p:Configuration=Release /nologo /verbosity:minimal
 ```
 
-Setup tạo database demo `ReportingModuleDemo`, áp dụng migration đến version 10 và seed dữ liệu. Chạy lại giữ dữ liệu; từ chối database có sẵn không mang dấu demo của dự án. Không dùng dữ liệu công ty thật.
+Setup tạo database demo `ReportingModuleDemo`, áp dụng migration đến version 11 và seed dữ liệu. Chạy lại giữ dữ liệu; từ chối database có sẵn không mang dấu demo của dự án. Không dùng dữ liệu công ty thật.
 
 Sau khi chạy setup, tạo Administrator đầu tiên tại máy bằng script dưới đây. Script yêu cầu mật khẩu trực tiếp trong PowerShell dưới dạng secure string và không lưu nó vào dự án:
 
@@ -70,7 +70,7 @@ Chạy bằng tài khoản Windows truy cập được SQL demo. `run-all.ps1` c
 - Sổ tổng hợp nhập thủ công, chưa tự hạch toán từ kho/mua/bán/thanh toán. Bảng cân đối và tài khoản chỉ mang tính thực hành.
 - PDF báo cáo và chứng từ là văn bản vector có thể tìm/chọn. Kết xuất tối đa 5.000 dòng; quá giới hạn báo lỗi, không cắt dữ liệu âm thầm.
 - Danh mục tài khoản TT99 đã được nhận và kiểm tra cấu trúc trong `database/seed/tt99-accounts.csv`, nhưng chưa nạp vào cơ sở dữ liệu. CSV không có tính chất dư Nợ/Có/lưỡng tính cần cho schema; không suy đoán từ nhóm tài khoản.
-- Đơn vị demo local `DVDEMO` đang hiển thị tên và địa chỉ PicoCorp giả lập; MST để trống. Đây là dữ liệu cục bộ, chưa phải thông tin pháp lý đã xác minh.
+- Dữ liệu mẫu dùng tên đơn vị, khách hàng, nhà cung cấp, mặt hàng và tài khoản thực hành dễ đọc. Mã số thuế và chi tiết liên hệ không được tự tạo. Tên hiển thị được cập nhật bởi migration `database/012-demo-display-names.sql`; dữ liệu đơn vị PicoCorp chỉ là dữ liệu cục bộ, chưa phải thông tin pháp lý đã xác minh.
 - Snapshot kết xuất thuộc phiên, hết hạn sau 20 phút, tối đa 8 snapshot. Sửa ô lọc mà chưa áp dụng không đổi dữ liệu kết xuất.
 
 ## Tài liệu

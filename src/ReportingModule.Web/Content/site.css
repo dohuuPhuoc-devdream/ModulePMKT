@@ -54,8 +54,10 @@ a.catalog-button{text-decoration:none;display:inline-block}
 .module>details[open]>summary::after,.nested[open]>summary::after{transform:rotate(225deg) translate(-1px,-1px)}
 .module>details>summary:focus-visible,.nested>summary:focus-visible{outline:2px solid #f0b35a;outline-offset:-3px}
 @media(prefers-reduced-motion:reduce){.module>details>summary::after,.nested>summary::after{transition:none}}
-.admin-check-list label{margin:0 0 0 4px}.permission-matrix{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:3px 14px;margin:10px 0}
-.permission-matrix label{margin-left:5px;font-size:12px}.permission-matrix span{white-space:nowrap}
+.admin-check-list,.permission-matrix{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:6px 12px;margin:8px 0 14px}
+.admin-check-list>span,.permission-matrix>span{display:flex;align-items:flex-start;gap:8px;min-width:0;padding:6px 8px;border:1px solid #d8e0e7;border-radius:3px;background:#f8fafb}
+.admin-surface input[type=checkbox]{flex:0 0 16px;width:16px;height:16px;margin:1px 0 0;accent-color:#194b70;cursor:pointer}
+.admin-check-list label,.permission-matrix label{display:block;min-width:0;margin:0;font-size:13px;line-height:1.4;white-space:normal;cursor:pointer}
 .admin-surface h2,.catalog-editor h3{font-size:15px;margin:14px 0 8px}
 .login-body{min-height:100vh;display:grid;place-items:center;background:#edf1f5}
 .login-panel{width:min(430px,calc(100vw - 28px));padding:26px;background:#fff;border:1px solid #ccd7e0}
@@ -63,4 +65,4 @@ a.catalog-button{text-decoration:none;display:inline-block}
 .login-submit{margin-top:12px;min-width:120px;background:#194b70;color:#fff;border-color:#194b70}
 .login-submit:hover{background:#103a59}
 @media(max-width:900px){.app-header{height:auto;min-height:54px;flex-wrap:wrap;padding:8px 12px}.environment{margin-left:0}.identity-panel{width:100%;justify-content:flex-start;flex-wrap:wrap;white-space:normal;gap:7px 11px}}
-@media(max-width:540px){.permission-matrix{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:540px){.permission-matrix,.admin-check-list{grid-template-columns:minmax(0,1fr)}}
