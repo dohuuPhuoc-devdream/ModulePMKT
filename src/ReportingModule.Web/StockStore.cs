@@ -38,7 +38,9 @@ namespace ReportingModule.Web
   public DataTable Units() { var current=UnitAccess.CurrentTable();return current??Query("SELECT MaDonVi,TenDonVi,NgayBatDau FROM dbo.DonVi ORDER BY MaDonVi"); }
   public DataTable Items() { return Query("SELECT MaHang,TenHang,DonViTinh FROM dbo.HangHoa ORDER BY MaHang"); }
   public DataTable Suppliers() { return Query("SELECT MaNCC,TenNCC FROM dbo.NhaCungCap ORDER BY MaNCC"); }
-  public DataTable Warehouses(string unit) { UnitAccess.Demand(unit); return Query("SELECT MaKho,TenKho FROM dbo.Kho WHERE MaDonVi=@u ORDER BY MaKho",P("@u",SqlDbType.VarChar,unit,20)); }
+  // Inventory posting and opening balances are currently tracked at one warehouse per unit.
+  // Keep the selector explicit in the form, but only expose the supported default warehouse.
+  public DataTable Warehouses(string unit) { UnitAccess.Demand(unit); return Query("SELECT MaKho,TenKho FROM dbo.Kho WHERE MaDonVi=@u AND MaKho='KHO01' ORDER BY MaKho",P("@u",SqlDbType.VarChar,unit,20)); }
   public static DateTime Date(string text)
   {
    DateTime result;
@@ -86,7 +88,7 @@ namespace ReportingModule.Web
    if(!Regex.IsMatch(number,@"\A[A-Za-z0-9_/-]{1,30}\z")) throw new ArgumentException("Số phiếu: 1-30 ký tự không dấu, số, _, / hoặc -.");
    if((note??"").Length>500) throw new ArgumentException("Diễn giải tối đa 500 ký tự.");
    warehouse=(warehouse??"").Trim(); deliveryPerson=(deliveryPerson??"").Trim();
-   if(purchaseReceipt && (warehouse.Length<1||warehouse.Length>20)) throw new ArgumentException("Mã kho bắt buộc, tối đa 20 ký tự.");
+   if(purchaseReceipt && warehouse!="KHO01") throw new ArgumentException("Phiên bản hiện tại ghi nhận tồn tại kho chính KHO01.");
    if(deliveryPerson.Length>120) throw new ArgumentException("Người giao hàng tối đa 120 ký tự.");
    if(id.HasValue && (version==null||version.Length!=8)) throw new ArgumentException("Chọn lại phiếu trước khi sửa.");
    var table=new DataTable(); table.Columns.Add("Dong",typeof(int)); table.Columns.Add("MaHang",typeof(string)); table.Columns.Add("SoLuong",typeof(decimal)); table.Columns.Add("DonGia",typeof(decimal));

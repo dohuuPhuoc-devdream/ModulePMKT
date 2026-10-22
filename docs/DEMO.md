@@ -4,7 +4,7 @@ Chạy setup/build theo README. Các bước trình duyệt yêu cầu IIS/IIS E
 
 ## 1. Điều hướng và danh mục
 
-Mở Thông tin chung. Kiểm tra đủ bảy menu ngang, mở menu lồng nhau bằng chuột/bàn phím; Escape đóng menu. Mở Danh mục khách hàng, tìm KH001, Làm tươi. Thử thêm/sửa/xóa một mã thử chưa có liên kết. Export lấy mẫu Excel; Import bản sao có mã mới, kiểm tra mã trùng bị từ chối, không ghi đè.
+Mở Thông tin chung. Kiểm tra đủ bảy menu ngang, mở menu lồng nhau bằng chuột/bàn phím; Escape đóng menu. Mở Danh mục khách hàng, tìm `KHDEMO001` (Công ty TNHH Minh Phát), rồi nhấn Làm tươi. Thử thêm/sửa/xóa một mã thử chưa có liên kết. Export lấy mẫu Excel; Import bản sao có mã mới, kiểm tra mã trùng bị từ chối, không ghi đè.
 
 ## 2. Tồn kho chuẩn
 
@@ -14,13 +14,14 @@ Tạo phiếu xuất mới, ngày sau PX001, HANG001 số lượng 200, giá kh�
 
 ## 3. Mua/bán và công nợ
 
-Để không ảnh hưởng bộ nghiệm thu chuẩn, tạo một đơn vị thực hành mới với ngày bắt đầu 01/01/2026; dùng HANG002, KH001, NCC001. Những mã này đều là dữ liệu giả lập.
+Để không ảnh hưởng bộ nghiệm thu chuẩn, tạo một đơn vị mới với ngày bắt đầu 01/01/2026; dùng HANG002, `KHDEMO001` (Công ty TNHH Minh Phát) và `NCCDEMO001` (Công ty TNHH Vật tư Hòa Bình). Đây là dữ liệu giả lập.
 
-1. Ghi sổ hóa đơn mua ngày 02/01/2026: HANG002, số lượng 10, giá 100 → tiền hàng 1.000, tồn 10.
-2. Ghi sổ hóa đơn bán ngày 03/01/2026: số lượng 3, giá 100 → doanh thu 300, tồn 7.
-3. Trong Xem hóa đơn bán, ghi nhận thu 100 ngày 04/01/2026 → công nợ khách hàng cuối kỳ 200.
-4. Trong Xem hóa đơn mua, ghi nhận trả 100 → công nợ nhà cung cấp cuối kỳ 900.
-5. Xem các báo cáo chi tiết/phân tích, chọn đúng đơn vị và năm 2026. Mỗi hóa đơn chỉ tạo một biến động kho; các menu hóa đơn dùng chung dữ liệu.
+1. Ghi sổ phiếu nhập mua ngày 02/01/2026 tại kho mặc định `KHO01`: `NCCDEMO001`, HANG002, số lượng 10, đơn giá 100 → tiền hàng 1.000, tồn 10.
+2. Ghi sổ hóa đơn mua cùng nhà cung cấp, cùng đơn vị, cùng ngày hoặc sau ngày phiếu nhập; chi tiết mã hàng, số lượng và đơn giá phải khớp từng dòng phiếu nhập. Hóa đơn làm tăng công nợ, không nhập kho lần hai.
+3. Ghi sổ hóa đơn bán ngày 03/01/2026: số lượng 3, giá 100 → doanh thu 300, tồn 7.
+4. Trong Xem hóa đơn bán, ghi nhận thu 100 ngày 04/01/2026 → công nợ khách hàng cuối kỳ 200.
+5. Trong Xem hóa đơn mua, ghi nhận trả 100 → công nợ nhà cung cấp cuối kỳ 900.
+6. Xem các báo cáo chi tiết/phân tích, chọn đúng đơn vị và năm 2026. Phiếu nhập mua tạo biến động kho; hóa đơn mua chỉ tạo công nợ. Hóa đơn bán tạo biến động kho; các menu hóa đơn dùng chung dữ liệu.
 
 Dùng đơn vị mới cho mỗi lần lặp demo để các số trên không cộng dồn. Các bước này là hướng dẫn, không được tự động tạo bởi Phase 9.
 

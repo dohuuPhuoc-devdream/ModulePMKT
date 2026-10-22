@@ -76,7 +76,7 @@ namespace ReportingModule.Web
    number=new TextBox { ID="Number",MaxLength=30 }; AddField(header,"Số phiếu *",number);
    date=new TextBox { ID="DocumentDate",TextMode=TextBoxMode.Date }; AddField(header,"Ngày *",date);
    note=new TextBox { ID="Note",MaxLength=500 }; AddField(header,"Diễn giải",note);
-   if(screen=="purchase-receipt") { supplier=new DropDownList { ID="Supplier" }; AddField(header,"Nhà cung cấp *",supplier); warehouse=new DropDownList { ID="Warehouse" }; AddField(header,"Kho *",warehouse); deliveryPerson=new TextBox { ID="DeliveryPerson",MaxLength=120 }; AddField(header,"Người giao hàng",deliveryPerson); }
+   if(screen=="purchase-receipt") { supplier=new DropDownList { ID="Supplier" }; AddField(header,"Nhà cung cấp *",supplier); warehouse=new DropDownList { ID="Warehouse",Enabled=false }; AddField(header,"Kho (mặc định)",warehouse); deliveryPerson=new TextBox { ID="DeliveryPerson",MaxLength=120 }; AddField(header,"Người giao hàng",deliveryPerson); }
    var hint=new HtmlGenericControl("p"); hint.Attributes["class"]="muted"; hint.InnerText=NumberParser.Hint+" Số lượng tối đa 3 số lẻ; đơn giá tối đa 4. Dòng trống được bỏ qua. Phiếu đã ghi sổ không được sửa/xóa."; editor.Controls.Add(hint);
    detailHtml=new Literal(); editor.Controls.Add(detailHtml);
    add=Button(editor,"AddLine","Thêm dòng",()=>{if(lines.Count>=100) throw new ArgumentException("Tối đa 100 dòng."); lines.Add(new[]{"","",""});});
@@ -209,7 +209,7 @@ namespace ReportingModule.Web
   private void Save(bool posting)
   {
    if(!editor.Visible || ReadOnlyMode) throw new ArgumentException("Mở phiếu nháp để lưu.");
-   store.Save(SelectedId,Version,DraftUnit,kind,number.Text,StockStore.Date(date.Text),note.Text,StockStore.ParseLines(lines),posting,supplier==null?null:supplier.SelectedValue,screen=="purchase-receipt",warehouse==null?"KHO01":warehouse.SelectedValue,deliveryPerson==null?null:deliveryPerson.Text);
+   store.Save(SelectedId,Version,DraftUnit,kind,number.Text,StockStore.Date(date.Text),note.Text,StockStore.ParseLines(lines),posting,supplier==null?null:supplier.SelectedValue,screen=="purchase-receipt","KHO01",deliveryPerson==null?null:deliveryPerson.Text);
    Done(posting?(screen=="purchase-receipt"?"Đã ghi sổ phiếu nhập mua và cập nhật tồn kho.":"Đã ghi sổ phiếu và cập nhật tồn kho."):"Đã lưu phiếu nháp; chưa tác động tồn kho.");
   }
   private void Export(string format)

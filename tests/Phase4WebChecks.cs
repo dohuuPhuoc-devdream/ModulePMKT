@@ -114,7 +114,9 @@ class Phase4WebChecks
   try {
    Screen("purchase-receipt");query="screen=purchase-receipt&unit="+warehouseUnit+"&from=2026-01-01&to=2026-12-31";
    var warehousePage=Post(Request(),"New");
-   Check(warehousePage.Body.Contains("value=\""+warehouseB+"\"")&&!warehousePage.Body.Contains("value=\""+warehouseA+"\""),"warehouse choices are rebound to the selected unit after Web Forms applies post data");
+   Check(warehousePage.Body.Contains("value=\"KHO01\"")&&warehousePage.Body.Contains("disabled=\"disabled\"")&&
+    !warehousePage.Body.Contains("value=\""+warehouseA+"\"")&&!warehousePage.Body.Contains("value=\""+warehouseB+"\""),
+    "stock entry locks the warehouse selector to KHO01 for the selected unit");
   } finally {
    SQL("DELETE dbo.Kho WHERE (MaDonVi='DVDEMO' AND MaKho=@a) OR (MaDonVi=@u AND MaKho=@b)",new SqlParameter("@a",warehouseA),new SqlParameter("@u",warehouseUnit),new SqlParameter("@b",warehouseB));
    catalogs.Delete(CatalogDefinition.Get("units"),catalogs.Find(CatalogDefinition.Get("units"),warehouseUnit));

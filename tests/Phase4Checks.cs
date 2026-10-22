@@ -32,6 +32,13 @@ class Phase4Checks
   var masters=new CatalogStore(cs); var units=CatalogDefinition.Get("units"); var items=CatalogDefinition.Get("items");
   masters.Create(units,new[]{unit,"Phase 4 isolated test","2026-01-01"});
   try {
+   SQL("INSERT dbo.Kho(MaDonVi,MaKho,TenKho) VALUES(@u,'KHO02',N'Kho phụ kiểm tra');",new SqlParameter("@u",unit));
+   Check(store.Warehouses(unit).Rows.Count==1 && Convert.ToString(store.Warehouses(unit).Rows[0]["MaKho"])=="KHO01","current unit exposes only its supported default warehouse");
+   Reject(()=>store.Save(null,null,unit,"N","OTHER-WH",day,"secondary warehouse",Lines(1),true,"NCCDEMO001",true,"KHO02"),"secondary warehouse receipt rejected before posting");
+   bool databaseRejected=false;
+   try { SQL("INSERT dbo.ChungTuKho(MaDonVi,Loai,SoChungTu,Ngay,MaKho) VALUES(@u,'N','DIRECT-OTHER-WH','2026-01-02','KHO02');",new SqlParameter("@u",unit)); }
+   catch(SqlException ex) { if(ex.Number==547) databaseRejected=true; else throw; }
+   Check(databaseRejected && Convert.ToInt32(SQL("SELECT COUNT(*) FROM dbo.ChungTuKho WHERE MaDonVi=@u AND SoChungTu='DIRECT-OTHER-WH'",new SqlParameter("@u",unit)))==0,"database constraint blocks alternate warehouse writes outside the application");
    masters.Create(items,new[]{item,"Phase 4 test item","Cai","1","2"});
    SQL("INSERT dbo.TonDauKy(MaDonVi,MaHang,SoLuong) VALUES(@u,@i,100);",new SqlParameter("@u",unit),new SqlParameter("@i",item));
    Check(Closing(day,day.AddDays(30))==100,"opening from SQL");

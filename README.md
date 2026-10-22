@@ -7,7 +7,7 @@
 - Bảy phân hệ đúng V3; menu ngang luôn hiện, menu con lồng nhau, thanh công cụ theo chức năng và Làm tươi.
 - Bốn danh mục: đơn vị, khách hàng, nhà cung cấp, hàng hóa; CRUD, tìm kiếm, Excel import/export.
 - Đơn vị có trường thông tin pháp lý để người dùng tự khai báo; mỗi đơn vị có kho mặc định `KHO01`, người dùng có đơn vị làm việc mặc định.
-- Phiếu nhập mua cập nhật kho; hóa đơn mua liên kết phiếu nhập và cập nhật công nợ riêng. Hóa đơn bán tạo phiếu xuất liên kết. Đơn hàng, bản nháp, ghi sổ nguyên tử, kiểm tra tồn kho và xung đột sửa đổi.
+- Phiếu nhập mua cập nhật kho; hóa đơn mua liên kết phiếu nhập và cập nhật công nợ riêng. Hóa đơn bán tạo phiếu xuất liên kết. Đơn hàng, bản nháp, ghi sổ nguyên tử, kiểm tra tồn kho và xung đột sửa đổi. Tồn kho hiện theo một kho mặc định `KHO01` cho mỗi đơn vị; chưa hỗ trợ điều chuyển hay tồn nhiều kho.
 - Thanh toán từng hóa đơn; báo cáo công nợ khách hàng/nhà cung cấp.
 - Phiếu kế toán thủ công và bảng cân đối đại diện với hệ tài khoản thực hành.
 - 11 báo cáo truy vấn SQL thực; Print/PDF/Excel từ toàn bộ kết quả theo điều kiện đã áp dụng.
@@ -38,7 +38,7 @@ Khi nâng/hạ phiên bản NuGet, cập nhật `packages.config`, các `HintPat
 trong `.csproj`, cùng binding redirects trong `Web.config` nếu assembly yêu cầu.
 Sau đó chạy lại script restore để xác nhận các tham chiếu và bản Release đều hợp lệ.
 
-Setup tạo database demo `ReportingModuleDemo`, áp dụng migration đến version 13 và seed dữ liệu. Chạy lại giữ dữ liệu; từ chối database có sẵn không mang dấu demo của dự án. Không dùng dữ liệu công ty thật.
+Setup tạo database demo `ReportingModuleDemo`, áp dụng migration đến version 15 và seed dữ liệu. Chạy lại giữ dữ liệu; từ chối database có sẵn không mang dấu demo của dự án. Không dùng dữ liệu công ty thật.
 
 Sau khi chạy setup, tạo Administrator đầu tiên tại máy bằng script dưới đây. Script yêu cầu mật khẩu trực tiếp trong PowerShell dưới dạng secure string và không lưu nó vào dự án:
 
@@ -77,11 +77,13 @@ Chạy bằng tài khoản Windows truy cập được SQL demo. `run-all.ps1` c
 
 - Đây là demo cục bộ có đăng nhập/phân quyền. Chưa hoàn tất nghiệm thu trình duyệt có tài khoản thật, backup/restore, cấu hình IIS production hoặc public deployment. Giữ cổng SQL riêng tư.
 - Hóa đơn tính tiền hàng, chưa có thuế/chiết khấu/đa tiền tệ. Đơn hàng chưa chuyển tự động sang hóa đơn.
-- Liên kết hiện tại cho phép một phiếu nhập trên mỗi hóa đơn mua; chưa đối chiếu số lượng/giá từng dòng, chưa phân bổ một hóa đơn cho nhiều phiếu nhập.
+- Báo cáo kho thể hiện số lượng ở kho mặc định `KHO01`; chưa có tồn đầu kỳ theo giá trị, phương pháp tính giá xuất hoặc giá vốn. Không dùng các số này như báo cáo định giá hàng tồn kho.
+- Liên kết hiện tại cho phép một phiếu nhập trên mỗi hóa đơn mua; khi ghi sổ, từng dòng phải khớp mã hàng, số lượng và đơn giá với phiếu nhập. Chưa hỗ trợ thuế/chiết khấu, chênh lệch giá hoặc phân bổ một hóa đơn cho nhiều phiếu nhập.
 - Công nợ dựa trên hóa đơn và thanh toán đã ghi nhận; chưa có số dư công nợ đầu kỳ nhập ngoài, ứng trước hoặc đảo thanh toán.
 - Sổ tổng hợp nhập thủ công, chưa tự hạch toán từ kho/mua/bán/thanh toán. Bảng cân đối và tài khoản chỉ mang tính thực hành.
 - PDF báo cáo và chứng từ là văn bản vector có thể tìm/chọn. Kết xuất tối đa 5.000 dòng; quá giới hạn báo lỗi, không cắt dữ liệu âm thầm.
 - Danh mục TT99 có 184 tài khoản đã được đối chiếu mã và tên với Phụ lục II, mục A của Công báo và nạp bằng migration 014. `TinhChat` dư Nợ/Có/lưỡng tính để rỗng vì phần danh mục không công bố thuộc tính đó; hệ thống chưa dùng thuộc tính này để chặn ghi sổ hoặc quyết định cột số dư.
+- Việc nạp danh mục tài khoản TT99 chỉ xác nhận mã, tên và cấu trúc danh mục. Đây không phải xác nhận phần mềm tuân thủ đầy đủ chế độ kế toán hay đủ điều kiện dùng cho sổ kế toán doanh nghiệp. Bộ Tài chính nêu Thông tư 99/2025/TT-BTC có hiệu lực từ 01/01/2026 và áp dụng cho năm tài chính bắt đầu từ hoặc sau ngày đó; báo cáo Final cần xác định đối tượng áp dụng và quy định hiện hành theo phạm vi đề tài. ([Bộ Tài chính – thông tin triển khai Thông tư 99/2025/TT-BTC](https://www.mof.gov.vn/tin-tuc-tai-chinh/tin-chinh-sach-tai-chinh/tap-huan-trien-khai-thong-tu-so-992025tt-btc))
 - Dữ liệu mẫu dùng tên đơn vị, khách hàng, nhà cung cấp, mặt hàng và tài khoản thực hành dễ đọc. Seed `database/002-seed.sql` áp dụng cho database mới; migration `database/012-demo-display-names.sql` đổi nhãn placeholder cũ và chỉ điền tên pháp lý/địa chỉ DVDEMO khi các trường còn trống hoặc chứa placeholder. Thông tin PicoCorp là dữ liệu mẫu chưa được xác minh; mã số thuế và chi tiết liên hệ vẫn để trống.
 - Snapshot kết xuất thuộc phiên, hết hạn sau 20 phút, tối đa 8 snapshot. Sửa ô lọc mà chưa áp dụng không đổi dữ liệu kết xuất.
 

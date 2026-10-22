@@ -31,6 +31,11 @@ class Phase5Checks
    Reject(()=>c.Save(draft,v,u,"SALES_INVOICE","DRAFT",day.AddDays(2),"",Lines(2),false,"KHDEMO001"),"stale edit rejected");
    c.Delete(draft,Version(draft,"SALES_INVOICE"),u,"SALES_INVOICE");
    long receipt=stock.Save(null,null,u,"N","PR",day.AddDays(2),"receipt",Lines(50),true,"NCCDEMO001",true);
+   Reject(()=>c.Save(null,null,u,"PURCHASE_INVOICE","PI-QTY-MISMATCH",day.AddDays(2),"invoice quantity differs",Lines(49),true,"NCCDEMO001",receipt),"purchase invoice rejects quantity that differs from its receipt");
+   Reject(()=>c.Save(null,null,u,"PURCHASE_INVOICE","PI-PRICE-MISMATCH",day.AddDays(2),"invoice price differs",new[]{new StockLine(i,50,3.1234m)},true,"NCCDEMO001",receipt),"purchase invoice rejects price that differs from its receipt");
+   Reject(()=>c.Save(null,null,u,"PURCHASE_INVOICE","PI-LINE-MISMATCH",day.AddDays(2),"split prices hide same total",new[]{new StockLine(i,25,1.1234m),new StockLine(i,25,3.1234m)},true,"NCCDEMO001",receipt),"purchase invoice rejects different duplicate-item line prices even when the total matches");
+   Reject(()=>c.Save(null,null,u,"PURCHASE_INVOICE","PI-EARLY",day.AddDays(1),"invoice predates receipt",Lines(50),true,"NCCDEMO001",receipt),"purchase invoice cannot be dated before its receipt");
+   Check(c.List(u,"PURCHASE_INVOICE",day,day.AddYears(1),"PI-QTY-MISMATCH").Rows.Count==0&&c.List(u,"PURCHASE_INVOICE",day,day.AddYears(1),"PI-LINE-MISMATCH").Rows.Count==0,"rejected purchase-invoice mismatches leave no header");
    long purchase=c.Save(null,null,u,"PURCHASE_INVOICE","PI",day.AddDays(2),"invoice",Lines(50),true,"NCCDEMO001",receipt); long sale=Save("SALES_INVOICE","SI",20);
    Reject(()=>c.Save(null,null,u,"PURCHASE_INVOICE","PI-DUP",day.AddDays(2),"duplicate receipt",Lines(1),true,"NCCDEMO001",receipt),"a posted receipt cannot be invoiced twice");
    Check(c.PurchaseReceipts(u,"NCCDEMO001").Rows.Count==0&&c.PurchaseReceipts(u,"NCCDEMO002").Rows.Count==0,"receipt selector excludes invoiced receipts and filters by supplier");

@@ -10,6 +10,7 @@ SET CONCAT_NULL_YIELDS_NULL ON;
 SET NUMERIC_ROUNDABORT OFF;
 SET XACT_ABORT ON;
 IF (SELECT COUNT(*) FROM dbo.SchemaVersion WHERE Version=1)<>1 THROW 51100,'Missing schema version.',1;
+IF (SELECT COUNT(*) FROM dbo.SchemaVersion WHERE Version=15)<>1 THROW 51100,'Current migration version 15 is missing.',1;
 IF (SELECT COUNT(*) FROM dbo.SeedHistory WHERE SeedName='phase2-demo-v1')<>1 THROW 51101,'Missing seed marker.',1;
 IF NOT EXISTS(SELECT 1 FROM dbo.TonDauKy WHERE MaDonVi='DVDEMO' AND MaHang='HANG001' AND SoLuong=100) THROW 51102,'Opening 100 missing.',1;
 IF (SELECT COUNT(*) FROM dbo.HangHoa WHERE MaHang LIKE 'HANG00%' OR MaHang='HANG010')<10 THROW 51103,'Item seed missing.',1;
@@ -23,6 +24,7 @@ IF NOT EXISTS(SELECT 1 FROM dbo.TaiKhoan WHERE MaTK='131' AND TenTK=N'Phải thu
 IF (SELECT COUNT(*) FROM dbo.TaiKhoan WHERE LoaiTaiKhoan IS NOT NULL)<>184 THROW 51113,'TT99 account chart is incomplete.',1;
 IF EXISTS(SELECT 1 FROM sys.foreign_keys WHERE is_disabled=1 OR is_not_trusted=1) THROW 51106,'Untrusted FK.',1;
 IF EXISTS(SELECT 1 FROM sys.check_constraints WHERE is_disabled=1 OR is_not_trusted=1) THROW 51107,'Untrusted check constraint.',1;
+IF EXISTS(SELECT 1 FROM dbo.ChungTuKho WHERE MaKho<>'KHO01') THROW 51114,'Stock vouchers exceed the documented single-warehouse scope.',1;
 PRINT 'PASS: version, seed counts, HANG001 opening 100, trusted constraints.';
 
 -- All positive and negative fixtures are rolled back, leaving seed unchanged.
@@ -48,6 +50,7 @@ INSERT @Cases VALUES
 ('Referenced item delete',N'DELETE dbo.HangHoa WHERE MaHang=''HANG001''',547),
 ('Wrong invoice partner',N'INSERT dbo.ChungTuThuongMai(MaDonVi,Loai,SoChungTu,Ngay,MaNCC) VALUES(''DVDEMO'',''SALES_INVOICE'',''VERIFY'',''20260102'',''NCCDEMO001'')',547),
 ('Invalid status',N'INSERT dbo.ChungTuKho(MaDonVi,Loai,SoChungTu,Ngay,TrangThai) VALUES(''DVDEMO'',''N'',''VERIFY'',''20260102'',''INVALID'')',547),
+('Non-default inventory warehouse',N'INSERT dbo.ChungTuKho(MaDonVi,Loai,SoChungTu,Ngay,MaKho) VALUES(''DVDEMO'',''N'',''VERIFY'',''20260102'',''KHO02'')',547),
 ('Zero quantity',N'INSERT dbo.ChungTuKho(MaDonVi,Loai,SoChungTu,Ngay) VALUES(''DVDEMO'',''N'',''VERIFY'',''20260102''); DECLARE @d bigint=SCOPE_IDENTITY(); INSERT dbo.CTChungTuKho VALUES(@d,1,''HANG001'',0,1)',547),
 ('Negative quantity',N'INSERT dbo.ChungTuKho(MaDonVi,Loai,SoChungTu,Ngay) VALUES(''DVDEMO'',''N'',''VERIFY'',''20260102''); DECLARE @d bigint=SCOPE_IDENTITY(); INSERT dbo.CTChungTuKho VALUES(@d,1,''HANG001'',-1,1)',547),
 ('Negative detail price',N'INSERT dbo.ChungTuKho(MaDonVi,Loai,SoChungTu,Ngay) VALUES(''DVDEMO'',''N'',''VERIFY'',''20260102''); DECLARE @d bigint=SCOPE_IDENTITY(); INSERT dbo.CTChungTuKho VALUES(@d,1,''HANG001'',1,-1)',547),
