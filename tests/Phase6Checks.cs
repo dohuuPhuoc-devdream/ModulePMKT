@@ -32,13 +32,13 @@ class Phase6Checks
    long buy=c.Save(null,null,u,"PURCHASE_INVOICE","PI",day.AddDays(2),"invoice",Lines(50),true,"NCCDEMO001",receipt),sale=Save("SALES_INVOICE","SI",20);
    decimal stockBefore=Closing(),revenue=Total("revenue");
    Pay(sale,"SALES_INVOICE","AR1",3,10.1234m); Pay(buy,"PURCHASE_INVOICE","AP1",3,20.1234m);
-   var r=Debt("receivables",0,3); Check((decimal)r["DuDau"]==0 && (decimal)r["PhatSinh"]==42.468m && (decimal)r["ThanhToan"]==10.1234m && (decimal)r["DuCuoi"]==32.3446m,"AR exact fractional balance");
-   r=Debt("payables",0,3); Check((decimal)r["DuCuoi"]==86.0466m,"AP exact balance");
+   var r=Debt("receivables",0,3); Check((decimal)r["DuDau"]==0 && (decimal)r["PhatSinh"]==42m && (decimal)r["ThanhToan"]==10.1234m && (decimal)r["DuCuoi"]==31.8766m,"AR uses whole-VND invoice total and exact payments");
+   r=Debt("payables",0,3); Check((decimal)r["DuCuoi"]==85.8766m,"AP uses whole-VND invoice total and exact payments");
    var token=Guid.NewGuid(); Pay(sale,"SALES_INVOICE","AR2",5,2.0001m,token); Pay(sale,"SALES_INVOICE","AR2",5,2.0001m,token);
    Check(c.Payments(sale,u,"SALES_INVOICE").Rows.Count==2,"replayed request creates one payment");
    Reject(()=>Pay(sale,"SALES_INVOICE","AR3",5,2,token),"changed replay payload rejected");
-   r=Debt("receivables",4,5); Check((decimal)r["DuDau"]==32.3446m && (decimal)r["PhatSinh"]==0 && (decimal)r["ThanhToan"]==2.0001m && (decimal)r["DuCuoi"]==30.3445m,"prior invoices/payments flow to period opening");
-   Check((decimal)Debt("receivables",0,3)["DuCuoi"]==32.3446m,"future payments excluded from historical balance");
+   r=Debt("receivables",4,5); Check((decimal)r["DuDau"]==31.8766m && (decimal)r["PhatSinh"]==0 && (decimal)r["ThanhToan"]==2.0001m && (decimal)r["DuCuoi"]==29.8765m,"prior invoices/payments flow to period opening");
+   Check((decimal)Debt("receivables",0,3)["DuCuoi"]==31.8766m,"future payments excluded from historical balance");
    Reject(()=>Pay(sale,"SALES_INVOICE","EARLY",1,1),"payment before invoice rejected");
    Reject(()=>Pay(sale,"SALES_INVOICE","OVER",6,31),"overpayment rejected");
    Reject(()=>Pay(sale,"SALES_INVOICE","ZERO",6,0),"zero payment rejected");
@@ -50,7 +50,7 @@ class Phase6Checks
    int passed=0,rejected=0;
    Parallel.For(0,2,n=>{try {Pay(sale,"SALES_INVOICE","RACE"+n,7,20); System.Threading.Interlocked.Increment(ref passed);} catch(SqlException ex) {if(ex.Number!=51404) throw; System.Threading.Interlocked.Increment(ref rejected);} });
    Check(passed==1&&rejected==1,"simultaneous payments cannot overpay");
-   Pay(sale,"SALES_INVOICE","FINAL",8,10.3445m);
+   Pay(sale,"SALES_INVOICE","FINAL",8,9.8765m);
    Check((decimal)Debt("receivables",0,8)["DuCuoi"]==0,"full settlement closes invoice exactly");
    Reject(()=>Pay(sale,"SALES_INVOICE","EXTRA",9,0.0001m),"settled invoice cannot receive extra payment");
    Check(c.Report(u,day,day.AddYears(1),"KHDEMO002","receivables").Rows.Count==0,"partner isolation");

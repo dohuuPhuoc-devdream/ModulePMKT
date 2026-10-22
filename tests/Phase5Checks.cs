@@ -40,9 +40,9 @@ class Phase5Checks
    Reject(()=>c.Save(null,null,u,"PURCHASE_INVOICE","UNLINKED",day.AddDays(2),"",Lines(1),true,"NCCDEMO001"),"purchase invoice cannot post without receipt link");
    Reject(()=>c.Save(null,null,u,"PURCHASE_INVOICE","WRONG-RECEIPT",day.AddDays(2),"",Lines(1),true,"NCCDEMO001",999999),"purchase invoice rejects unknown receipt");
    Reject(()=>c.Save(null,null,u,"PURCHASE_INVOICE","WRONG-SUPPLIER",day.AddDays(2),"",Lines(1),true,"NCCDEMO002",receipt),"purchase invoice rejects a receipt for another supplier");
-   foreach(var mode in new[]{"sales-detail","revenue","sales-analysis"}) Check(Total(mode)==42.468m,mode+" reconciles 20*2.1234");
-   foreach(var mode in new[]{"purchase-detail","purchase-analysis"}) Check(Total(mode)==106.17m,mode+" reconciles 50*2.1234");
-   Check(Total("revenue","KHDEMO002")==0 && Total("revenue","KHDEMO001")==42.468m,"partner filters");
+   foreach(var mode in new[]{"sales-detail","revenue","sales-analysis"}) Check(Total(mode)==42m,mode+" sums 20 line amounts rounded to whole VND");
+   foreach(var mode in new[]{"purchase-detail","purchase-analysis"}) Check(Total(mode)==106m,mode+" sums 50 line amounts rounded to whole VND");
+   Check(Total("revenue","KHDEMO002")==0 && Total("revenue","KHDEMO001")==42m,"partner filters");
    Check(c.Report(u,day,day.AddDays(1),"","revenue").Rows.Count==0,"date filter excludes later invoices");
    Check((int)c.Report(u,day,day.AddDays(2),"","revenue").Rows[0]["SoHoaDon"]==1,"inclusive end date and invoice count");
    Reject(()=>Save("SALES_INVOICE","FAIL",200),"new oversell rejected");

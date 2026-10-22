@@ -93,7 +93,7 @@ class Phase8WebChecks
    long sale=commerce.Save(null,null,unit,"SALES_INVOICE","S8",first,"",new[]{new StockLine("HANG002",3,100)},true,"KHDEMO001");
    commerce.RecordPayment(purchase,unit,"PURCHASE_INVOICE","PAY",first,100,"",Guid.NewGuid());
    commerce.RecordPayment(sale,unit,"SALES_INVOICE","REC",first,100,"",Guid.NewGuid());
-   new JournalStore(cs).Save(null,null,unit,"J8",first,"",new[]{new JournalLine("TS_TIEN",100,0),new JournalLine("NV_VON",0,100)},true);
+   new JournalStore(cs).Save(null,null,unit,"J8",first,"",new[]{new JournalLine("111",100,0),new JournalLine("4111",0,100)},true);
   foreach(string screen in new[]{"inbound","outbound","inventory","sales-detail","revenue","sales-analysis","purchase-detail","purchase-analysis","receivables","payables","balance"}) {
    pageName=Navigation.PageFor(screen); query="screen="+screen;
    var p=Request(); p=Post(p,"ExcelOutput"); Check(p.Status==200,"criteria required before output: "+screen);

@@ -60,10 +60,10 @@ namespace ReportingModule.Web
    }
    ValidateLines(lines); return lines;
   }
-  // Match SQL Server ROUND(..., 4): round each detail amount away from zero
-  // before the document total sums the persisted detail amounts.
+  // Match SQL Server ROUND(..., 0): VND line amounts are stored as whole đồng;
+  // document totals sum the rounded persisted line amounts.
   public static decimal CalculateLineAmount(decimal quantity,decimal price)
-  { return decimal.Round(quantity*price,4,MidpointRounding.AwayFromZero); }
+  { return decimal.Round(quantity*price,0,MidpointRounding.AwayFromZero); }
   internal static void ValidateLines(IList<StockLine> lines)
   {
    if(lines==null||lines.Count<1||lines.Count>100) throw new ArgumentException("Phiếu cần từ 1 đến 100 dòng.");
@@ -72,7 +72,7 @@ namespace ReportingModule.Web
     if(line==null||string.IsNullOrWhiteSpace(line.Item)||line.Item.Length>20) throw new ArgumentException("Mã hàng bắt buộc, tối đa 20 ký tự.");
     if(line.Quantity<=0||line.Quantity>999999999999999.999m||decimal.Round(line.Quantity,3)!=line.Quantity) throw new ArgumentException("Số lượng phải dương, tối đa 15 chữ số nguyên và 3 chữ số lẻ.");
     if(line.Price<0||line.Price>999999999999999.9999m||decimal.Round(line.Price,4)!=line.Price) throw new ArgumentException("Đơn giá không âm, tối đa 15 chữ số nguyên và 4 chữ số lẻ.");
-    try { if(decimal.Round(line.Quantity*line.Price,4,MidpointRounding.AwayFromZero)>999999999999999999999999.9999m) throw new OverflowException(); }
+    try { if(decimal.Round(line.Quantity*line.Price,0,MidpointRounding.AwayFromZero)>999999999999999999999999.9999m) throw new OverflowException(); }
     catch(OverflowException) { throw new ArgumentException("Thành tiền vượt giới hạn decimal(28,4)."); }
    }
   }

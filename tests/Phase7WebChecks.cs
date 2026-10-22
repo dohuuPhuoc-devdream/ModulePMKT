@@ -84,7 +84,7 @@ class Phase7WebChecks
   return Request(string.Join("&",fields.Select(kv=>HttpUtility.UrlEncode(kv.Key)+"="+HttpUtility.UrlEncode(kv.Value))));
  }
  static Dictionary<string,string> Lines(string debit,string credit)
- { return new Dictionary<string,string>{{"lineCount","2"},{"item0","TS_TIEN"},{"qty0",debit},{"price0","0"},{"item1","NV_VON"},{"qty1","0"},{"price1",credit}}; }
+ { return new Dictionary<string,string>{{"lineCount","2"},{"item0","111"},{"qty0",debit},{"price0","0"},{"item1","4111"},{"qty1","0"},{"price1",credit}}; }
  static JournalResult Save(JournalResult page,string button,string number,string debit,string credit)
  { return Post(page,button,new Dictionary<string,string>{{"Number",number},{"DocumentDate","2026-01-05"},{"Note","Phase 7 isolated test"}},Lines(debit,credit)); }
  static void Main(string[] args)
@@ -96,12 +96,12 @@ class Phase7WebChecks
   try {
    runner=(JournalRunner)ApplicationHost.CreateApplicationHost(typeof(JournalRunner),"/",Path.GetFullPath(args[0]));
    Screen("journal"); var page=Request(); Check(page.Status==200,"journal list renders");
-   page=Post(page,"New"); page=Post(page,"AddLine",null,new Dictionary<string,string>{{"lineCount","1"},{"item0","TS_TIEN"},{"qty0","10"},{"price0","0"}});
+   page=Post(page,"New"); page=Post(page,"AddLine",null,new Dictionary<string,string>{{"lineCount","1"},{"item0","111"},{"qty0","10"},{"price0","0"}});
    Check(page.Body.Contains("item1"),"add second journal line");
    page=Save(page,"Post","BAD","10.0001","10"); Check(page.Status==200&&HttpUtility.HtmlDecode(page.Body).Contains("Tổng Nợ phải bằng"),"UI shows exact imbalance error");
    Check(store.List(unit,first,last,"BAD").Rows.Count==0,"failed UI post leaves no header");
    page=Save(page,"SaveDraft","DRAFT","10","9"); Check(page.Status==302,"unbalanced draft saved");
-   page=Post(Select(Request()),"Edit"); Check(page.Body.Contains("TS_TIEN"),"draft reloads accounts");
+   page=Post(Select(Request()),"Edit"); Check(page.Body.Contains("111"),"draft reloads accounts");
    page=Save(page,"SaveDraft","DRAFT","20","20"); Check(page.Status==302,"draft edited");
    page=Post(Select(Request()),"Delete"); Check(page.Status==302&&store.List(unit,first,last,"").Rows.Count==0,"draft deleted");
    page=Post(Request(),"New"); page=Save(page,"Post","CAPITAL","100.1234","100.1234"); Check(page.Status==302,"balanced journal posted");

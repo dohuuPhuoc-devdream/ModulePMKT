@@ -24,9 +24,9 @@ class Phase4Checks
  static long Save(string kind,string no,int date,decimal qty,bool post=true) { return store.Save(null,null,unit,kind,no,day.AddDays(date),"Phase 4 test",Lines(qty),post); }
  static void Main(string[] args)
  {
-  Check(StockStore.CalculateLineAmount(0.001m,0.06m)==0.0001m,"each detail amount rounds half up to four decimal places");
-  Check(StockStore.CalculateLineAmount(0.001m,0.06m)+StockStore.CalculateLineAmount(0.001m,0.06m)==0.0002m,"document total sums rounded detail amounts");
-  Check(decimal.Round(0.001m*0.06m+0.001m*0.06m,4,MidpointRounding.AwayFromZero)==0.0001m,"rounding test distinguishes detail-first from total-first rounding");
+  Check(StockStore.CalculateLineAmount(100.5m,1m)==101m,"each VND detail amount rounds half up to whole đồng");
+  Check(StockStore.CalculateLineAmount(100.5m,1m)+StockStore.CalculateLineAmount(200.5m,1m)==302m,"document total sums rounded VND detail amounts");
+  Check(decimal.Round(100.5m+200.5m,0,MidpointRounding.AwayFromZero)==301m,"rounding each detail differs from rounding only the document total");
   cs=args[0]; store=new StockStore(cs);
   string tag=Guid.NewGuid().ToString("N").Substring(0,10); unit="U4"+tag; item="I4"+tag;
   var masters=new CatalogStore(cs); var units=CatalogDefinition.Get("units"); var items=CatalogDefinition.Get("items");

@@ -81,7 +81,7 @@ namespace ReportingModule.Web
    detailHtml=new Literal(); editor.Controls.Add(detailHtml);
    add=Button(editor,"AddLine","Thêm dòng",()=>{if(lines.Count>=100) throw new ArgumentException("Tối đa 100 dòng."); lines.Add(new[]{"","",""});});
    remove=Button(editor,"RemoveLine","Bỏ dòng cuối",()=>{if(lines.Count>0) lines.RemoveAt(lines.Count-1);});
-   Button(editor,"Calculate","Tính lại",()=>{var parsed=StockStore.ParseLines(lines); message.Text="Tổng tiền: "+parsed.Sum(l=>StockStore.CalculateLineAmount(l.Quantity,l.Price)).ToString("N4");});
+   Button(editor,"Calculate","Tính lại",()=>{var parsed=StockStore.ParseLines(lines); message.Text="Tổng tiền: "+parsed.Sum(l=>StockStore.CalculateLineAmount(l.Quantity,l.Price)).ToString("N0");});
    save=Button(editor,"SaveDraft","Lưu nháp",()=>Save(false));
    post=Button(editor,"Post","Lưu và ghi sổ",()=>Save(true)); post.OnClientClick="return confirm('Ghi sổ phiếu và cập nhật tồn kho? Phiếu đã ghi sổ không sửa/xóa tại đây.');";
    Button(editor,"Close","Đóng",()=>ClearEditor());
@@ -253,12 +253,12 @@ namespace ReportingModule.Web
     b.Append("</td><td>"); Input(b,"qty"+i,lines[i][1],"Số lượng dòng "+(i+1),24,false);
     b.Append("</td><td>"); Input(b,"price"+i,lines[i][2],"Đơn giá dòng "+(i+1),25,false);
     b.Append("</td><td class=\"numeric\">");
-    try { var line=StockStore.ParseLines(new[]{lines[i]}); if(line.Count==1) { decimal amount=StockStore.CalculateLineAmount(line[0].Quantity,line[0].Price); total+=amount; b.Append(amount.ToString("N4")); } }
+    try { var line=StockStore.ParseLines(new[]{lines[i]}); if(line.Count==1) { decimal amount=StockStore.CalculateLineAmount(line[0].Quantity,line[0].Price); total+=amount; b.Append(amount.ToString("N0")); } }
     catch(ArgumentException) { b.Append("-"); }
     catch(OverflowException) { b.Append("Vượt giới hạn"); }
     b.Append("</td></tr>");
    }
-   b.Append("</tbody><tfoot><tr><td colspan=\"4\">Tổng tiền các dòng hợp lệ (nhấn Tính lại sau khi sửa)</td><td class=\"numeric\">").Append(total.ToString("N4")).Append("</td></tr></tfoot></table></div><datalist id=\"stockItems\">");
+   b.Append("</tbody><tfoot><tr><td colspan=\"4\">Tổng tiền các dòng hợp lệ (nhấn Tính lại sau khi sửa)</td><td class=\"numeric\">").Append(total.ToString("N0")).Append("</td></tr></tfoot></table></div><datalist id=\"stockItems\">");
    if(items!=null) foreach(DataRow item in items.Rows) b.Append("<option value=\"").Append(HttpUtility.HtmlAttributeEncode(Convert.ToString(item["MaHang"]))).Append("\">").Append(HttpUtility.HtmlEncode(Convert.ToString(item["TenHang"]))).Append("</option>");
    return b.Append("</datalist>").ToString();
   }

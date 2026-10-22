@@ -12,7 +12,7 @@ GO
 IF NOT EXISTS(SELECT 1 FROM sys.extended_properties WHERE class=0 AND name=N'ReportingModulePurpose' AND CONVERT(nvarchar(200),value)=N'Synthetic internship demo V3')
  THROW 51004,'Existing database is not marked as this project demo. No schema changes allowed.',1;
 GO
-IF OBJECT_ID(N'dbo.SchemaVersion',N'U') IS NOT NULL AND EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version>11)
+IF OBJECT_ID(N'dbo.SchemaVersion',N'U') IS NOT NULL AND EXISTS(SELECT 1 FROM dbo.SchemaVersion WHERE Version>13)
  THROW 51005,'Database schema is newer than the migrations included in this setup.',1;
 GO
 :r database/001-schema.sql
@@ -38,4 +38,8 @@ GO
 :r database/011-stock-warehouse-slip.sql
 GO
 :r database/012-demo-display-names.sql
+GO
+:r database/013-tt99-ledger-foundation.sql
+GO
+:r database/014-tt99-accounts.sql
 GO

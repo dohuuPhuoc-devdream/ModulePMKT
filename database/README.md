@@ -1,4 +1,4 @@
-Current state: setup applies migrations through 012-demo-display-names.sql (schema version 11). Inventory, commerce, payments, manual ledger, authentication, permissions, unit access, legal unit profile fields, user default units and one default warehouse per unit are implemented. The phase notes below retain schema history; see ../README.md for current application setup.
+Current state: setup applies migrations through 014-tt99-accounts.sql (schema version 13). Inventory, commerce, payments, manual ledger, authentication, permissions, unit access, legal unit fields, user default units, default warehouse, TT99 account hierarchy and source-journal fields are present. The 184-account TT99 chart is loaded. The phase notes below retain schema history; see ../README.md for current application setup.
 
 Migration 010 adds optional legal profile fields to `DonVi` and a single default assigned working unit to `AppUserUnit`. Migration 011 adds `Kho`, seeds `KHO01` per unit (including units created later), and adds voucher-level `MaKho` and `NguoiGiaoHang` fields. `SaveStockDocument` validates that a selected purchase-receipt warehouse belongs to the document unit.
 
@@ -67,8 +67,10 @@ implemented or represented as invented menu functions.
 ### Numeric and date conventions
 
 - Quantity: decimal(18,3). Unit price: decimal(19,4).
-- Line amount: persisted computed decimal(28,4), rounded to 4 places from
-  quantity x unit price. Zero prices are allowed; quantities must be positive.
+- Line amount: persisted computed decimal(28,4), rounded to whole VND at each
+  detail line using SQL Server `ROUND(...,0)` (midpoints away from zero). The
+  document total sums those rounded line amounts. Quantity remains precise to
+  3 places and unit price to 4 places; zero prices are allowed.
 - Document total is derived as SUM(detail.ThanhTien); no independently editable
   header total is stored. Later services must handle SQL numeric overflow.
 - Document dates are `date`. Audit timestamps use UTC `datetime2(0)`.
@@ -112,17 +114,37 @@ check and write in one concurrency-safe transaction.
 user on 2026-10-19. The file contains 184 account rows: 71 level-1, 101 level-2,
 10 level-3 and 2 level-4 accounts. Codes are unique, parent codes resolve, the
 level-1 sequence is continuous from 1 to 71, and `LaTaiKhoanLa` agrees with the
-parent-child structure. The selected codes and names listed in the Phase 11
-task were checked against Appendix II in the [Government Gazette's official
-Thông tư 99/2025/TT-BTC PDF](https://congbao.chinhphu.vn/tai-ve-van-ban-so-99-2025-tt-btc-46529-59634?format=pdf).
+parent-child structure. All 184 account codes and names were compared with
+Appendix II, section A, in Government Gazette volume 1565 + 1566 for [Thông tư
+99/2025/TT-BTC](https://congbao.chinhphu.vn/van-ban/thong-tu-so-99-2025-tt-btc-46529/59634.htm).
+The comparison ignores only whitespace inserted by PDF text extraction and
+diacritic encoding differences; every code and name matched.
 
 The supplied CSV columns are `MaTK, TenTK, Cap, MaTKCha, SoTTCap1,
 LoaiTaiKhoan, LaTaiKhoanLa`. It does **not** contain the normal-balance
-classification (`N`, `C`, or `L`) required by a future TT99 import migration. Do not derive that
-accounting property from `LoaiTaiKhoan`: contra accounts and accounts that can
-carry either balance would be misclassified. TT99 account import is
-therefore pending an authoritative source column or an approved mapping. The
-CSV is staged as source data only; it has not yet been loaded into `TaiKhoan`.
+classification (`N`, `C`, or `L`). Migration 013 intentionally permits nullable
+`TinhChat`; no code uses it to block posting or choose a balance column. The
+Migration 014 loads all 184 accounts idempotently and preserves the exact
+source names, hierarchy, leaf status, root order and account category. The six
+internal teaching accounts map to 111, 131, 156, 331, 4111 and 4212; any
+referencing journal lines and report mappings are migrated before the old codes
+are removed. Existing target-code conflicts stop migration instead of being
+overwritten.
+
+Migration 013 also adds account parent/level/leaf/active/partner fields,
+optional journal-line description and partner columns, automatic-journal
+source columns and a unique source index. It creates `JournalLines2`; the Web
+Forms service has not yet switched to this type. Migration 014 adds the source
+category and root order columns needed to retain the verified Appendix II
+structure. `TinhChat` remains NULL because Appendix II section A does not
+declare normal-balance behavior; it is not used to block posting or choose a
+report column. Monetary line amounts for stock and commercial documents are
+recomputed using whole-VND line rounding.
+
+The legacy Phase 7 migration may run on every `setup.sql` invocation. Its
+teaching-account report mappings now leave an ordering slot alone when a later
+TT99 migration has reassigned that slot, so a full setup rerun does not
+recreate obsolete mappings or collide with the migrated chart.
 
 ## Seed
 

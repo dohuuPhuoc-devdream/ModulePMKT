@@ -20,7 +20,13 @@ IF EXISTS(SELECT 1 FROM @Accounts a JOIN dbo.TaiKhoan t ON t.MaTK=a.Ma WHERE t.T
 INSERT dbo.TaiKhoan(MaTK,TenTK) SELECT Ma,Ten FROM @Accounts a WHERE NOT EXISTS(SELECT 1 FROM dbo.TaiKhoan t WHERE t.MaTK=a.Ma);
 IF EXISTS(SELECT 1 FROM @Accounts a JOIN dbo.TaiKhoanBaoCao m ON m.MaTK=a.Ma WHERE m.Nhom<>a.Nhom OR m.ThuTu<>a.ThuTu)
  THROW 51500,'Existing teaching mapping differs; no overwrite.',1;
-INSERT dbo.TaiKhoanBaoCao(MaTK,Nhom,ThuTu) SELECT Ma,Nhom,ThuTu FROM @Accounts a WHERE NOT EXISTS(SELECT 1 FROM dbo.TaiKhoanBaoCao m WHERE m.MaTK=a.Ma);
+-- On a full setup rerun after the TT99 migration, the old teaching-account
+-- report positions may already belong to their statutory replacements. Do
+-- not recreate those obsolete mappings or violate the unique report order.
+INSERT dbo.TaiKhoanBaoCao(MaTK,Nhom,ThuTu)
+ SELECT a.Ma,a.Nhom,a.ThuTu FROM @Accounts a
+ WHERE NOT EXISTS(SELECT 1 FROM dbo.TaiKhoanBaoCao m WHERE m.MaTK=a.Ma)
+   AND NOT EXISTS(SELECT 1 FROM dbo.TaiKhoanBaoCao m WHERE m.ThuTu=a.ThuTu);
 IF TYPE_ID('dbo.JournalLines') IS NULL EXEC('CREATE TYPE dbo.JournalLines AS TABLE(Dong int PRIMARY KEY,MaTK varchar(20),PhatSinhNo decimal(28,4),PhatSinhCo decimal(28,4))');
 GO
 CREATE OR ALTER PROCEDURE dbo.SaveJournal
