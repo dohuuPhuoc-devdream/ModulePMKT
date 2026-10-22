@@ -16,7 +16,8 @@ namespace ReportingModule.Web
  {
   private static readonly CultureInfo Vi = CultureInfo.GetCultureInfo("vi-VN");
   private static readonly object FontLock = new object();
-  private static bool timesFontRegistered;
+  private static bool voucherFontRegistered;
+  private static string voucherFontFamily;
 
   public static byte[] Export(OutputSnapshot snapshot)
   {
@@ -36,18 +37,13 @@ namespace ReportingModule.Web
    QuestPDF.Settings.License=LicenseType.Community;
    lock(FontLock)
    {
-    if(!timesFontRegistered)
-    {
-     string fontPath=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts),"times.ttf");
-     if(File.Exists(fontPath)) FontManager.RegisterFontFromFile(fontPath);
-     timesFontRegistered=true;
-    }
+    EnsureVoucherFonts();
    }
    return Document.Create(document=>document.Page(page=>
    {
     page.Size(PageSizes.A4.Landscape());
     page.Margin(28);
-    page.DefaultTextStyle(style=>style.FontFamily("Times New Roman").FontSize(9).FontColor(Colors.Black));
+    page.DefaultTextStyle(style=>style.FontFamily(voucherFontFamily).FontSize(9).FontColor(Colors.Black));
     page.Header().Column(header=>
     {
      if(!String.IsNullOrWhiteSpace(voucher.UnitName)) header.Item().Text(voucher.UnitName).SemiBold().FontSize(10);
@@ -65,7 +61,7 @@ namespace ReportingModule.Web
       row.RelativeItem().AlignRight().Text((voucher.ScreenLabel())+": "+(voucher.DocumentNumber??""));
      });
      if(!String.IsNullOrWhiteSpace(voucher.DeliveryPerson)) Metadata(content,"Người giao hàng",voucher.DeliveryPerson);
-     if(!String.IsNullOrWhiteSpace(voucher.PartnerName)) Metadata(content,String.IsNullOrWhiteSpace(voucher.PartnerLabel)?"Đối tác":voucher.PartnerLabel,voucher.PartnerName);
+     if(!String.IsNullOrWhiteSpace(voucher.PartnerName)) Metadata(content,String.IsNullOrWhiteSpace(voucher.PartnerLabel)?(voucher.DocumentType=="purchase-receipt"?"Nhà cung cấp":"Đối tác"):voucher.PartnerLabel,voucher.PartnerName);
      if(!String.IsNullOrWhiteSpace(voucher.PartnerAddress)) Metadata(content,"Địa chỉ",voucher.PartnerAddress);
      if(!String.IsNullOrWhiteSpace(voucher.DocumentNote)) Metadata(content,"Diễn giải",voucher.DocumentNote);
      content.Item().Table(table=>
@@ -100,7 +96,7 @@ namespace ReportingModule.Web
      });
      string total=voucher.Total;
      if(voucher.DocumentType=="purchase-receipt"&&voucher.Lines.Columns.Contains("ThanhTien"))
-      total=voucher.Lines.Rows.Cast<DataRow>().Sum(row=>row["ThanhTien"]==DBNull.Value?0m:Convert.ToDecimal(row["ThanhTien"])).ToString("N0",Vi);
+      total=ReportOutput.PurchaseReceiptDongTotal(voucher.Lines).ToString("N0",Vi);
      if(!String.IsNullOrWhiteSpace(total))
       content.Item().AlignRight().Text(text=>{text.Span((voucher.TotalLabel??"Tổng cộng")+"     ").SemiBold();text.Span(total).SemiBold();});
      if(!String.IsNullOrWhiteSpace(voucher.AmountInWords))
@@ -165,6 +161,28 @@ namespace ReportingModule.Web
 
   private static void Metadata(ColumnDescriptor content,string label,string value)
   { content.Item().Row(row=>{row.ConstantItem(110).Text(label+":").SemiBold();row.RelativeItem().Text(value);}); }
+  private static void EnsureVoucherFonts()
+  {
+   if(voucherFontRegistered)return;
+   string directory=Environment.GetFolderPath(Environment.SpecialFolder.Fonts);
+   string[] times={"times.ttf","timesbd.ttf","timesi.ttf","timesbi.ttf"};
+   if(File.Exists(Path.Combine(directory,times[0])))
+   {
+    foreach(string name in times){string path=Path.Combine(directory,name);if(File.Exists(path))FontManager.RegisterFontFromFile(path);}
+    voucherFontFamily="Times New Roman";
+   }
+   else
+   {
+    // Georgia is a metrically different but available Windows serif fallback.
+    // Register its style files when present; never silently claim Times New Roman.
+    string[] georgia={"georgia.ttf","georgiab.ttf","georgiai.ttf","georgiaz.ttf"};
+    if(!File.Exists(Path.Combine(directory,georgia[0])))
+     throw new InvalidOperationException("Không tìm thấy Times New Roman hoặc Georgia trong thư mục phông Windows; không thể tạo mẫu phiếu có chân.");
+    foreach(string name in georgia){string path=Path.Combine(directory,name);if(File.Exists(path))FontManager.RegisterFontFromFile(path);}
+    voucherFontFamily="Georgia";
+   }
+   voucherFontRegistered=true;
+  }
   private static IContainer TableHeader(IContainer container)
   { return container.Background("#E7EEF4").Border(0.5f).BorderColor("#8393A1").PaddingVertical(5).PaddingHorizontal(4).DefaultTextStyle(style=>style.SemiBold()).AlignCenter(); }
   private static IContainer TableCell(IContainer container)
@@ -183,7 +201,7 @@ namespace ReportingModule.Web
    decimal amount;
    if(column.Field=="SoLuong"&&Decimal.TryParse(Convert.ToString(value,CultureInfo.InvariantCulture),NumberStyles.Any,CultureInfo.InvariantCulture,out amount))return amount.ToString("N2",Vi);
    if(column.Field=="DonGia"&&Decimal.TryParse(Convert.ToString(value,CultureInfo.InvariantCulture),NumberStyles.Any,CultureInfo.InvariantCulture,out amount))return amount.ToString("N4",Vi);
-   if(column.Field=="ThanhTien"&&Decimal.TryParse(Convert.ToString(value,CultureInfo.InvariantCulture),NumberStyles.Any,CultureInfo.InvariantCulture,out amount))return amount.ToString("N0",Vi);
+   if(column.Field=="ThanhTien"&&Decimal.TryParse(Convert.ToString(value,CultureInfo.InvariantCulture),NumberStyles.Any,CultureInfo.InvariantCulture,out amount))return ReportOutput.PurchaseReceiptDong(amount).ToString("N0",Vi);
    return String.IsNullOrEmpty(column.Format)?Convert.ToString(value,Vi):String.Format(Vi,column.Format,value);
   }
  }

@@ -103,12 +103,14 @@ namespace ReportingModule.Web
    int firstLine=headerRow+1,index=0;
    foreach(DataRow dataRow in s.Data.Rows){r=firstLine+index;put(r,0,++index,9);for(int c=0;c<s.Columns.Length;c++){
      var outputColumn=s.Columns[c];object value=dataRow[outputColumn.Field];int style=purchaseReceipt?(outputColumn.Field=="SoLuong"?15:outputColumn.Field=="DonGia"?16:outputColumn.Field=="ThanhTien"?17:9):outputColumn.Format.Contains("N3")?10:outputColumn.Format.Contains("N")?11:9;
+     if(purchaseReceipt&&outputColumn.Field=="ThanhTien"&&value!=DBNull.Value)value=ReportOutput.PurchaseReceiptDong(Convert.ToDecimal(value));
      put(r,c+1,value,style);
     }}
    int totalRow=purchaseReceipt?Math.Max(firstLine+s.Data.Rows.Count,firstLine+9)+1:firstLine+s.Data.Rows.Count+1;
    put(totalRow,s.Data.Columns.Contains("PhatSinhNo")||purchaseReceipt?0:Math.Max(0,columnCount-2),s.DocumentTotalLabel??"Tổng cộng",12);
    decimal total=0m;
-   if(s.Data.Columns.Contains("ThanhTien")) { foreach(DataRow dr in s.Data.Rows) if(dr["ThanhTien"]!=DBNull.Value) total+=Convert.ToDecimal(dr["ThanhTien"]); }
+   if(purchaseReceipt) total=ReportOutput.PurchaseReceiptDongTotal(s.Data);
+   else if(s.Data.Columns.Contains("ThanhTien")) { foreach(DataRow dr in s.Data.Rows) if(dr["ThanhTien"]!=DBNull.Value) total+=Convert.ToDecimal(dr["ThanhTien"]); }
    else if(s.Data.Columns.Contains("PhatSinhNo")) {
     decimal debit=0m,credit=0m;foreach(DataRow dr in s.Data.Rows){if(dr["PhatSinhNo"]!=DBNull.Value)debit+=Convert.ToDecimal(dr["PhatSinhNo"]);if(dr["PhatSinhCo"]!=DBNull.Value)credit+=Convert.ToDecimal(dr["PhatSinhCo"]);}
     int debitColumn=Array.FindIndex(s.Columns,c=>c.Field=="PhatSinhNo"),creditColumn=Array.FindIndex(s.Columns,c=>c.Field=="PhatSinhCo");

@@ -42,21 +42,37 @@ try {
     & $nuget restore $solution -PackagesDirectory $packages -NonInteractive -Verbosity normal
     if ($LASTEXITCODE -ne 0) { throw "NuGet restore failed with exit code $LASTEXITCODE." }
 
-    [xml]$config = Get-Content -LiteralPath 'src\ReportingModule.Web\packages.config' -Raw
+    $projectDirectory = Join-Path $root 'src\ReportingModule.Web'
+    [xml]$config = Get-Content -LiteralPath (Join-Path $projectDirectory 'packages.config') -Raw
+    $packageVersions = @{}
     foreach ($package in $config.packages.package) {
+        $packageVersions[[string]$package.id] = [string]$package.version
         $packageDirectory = Join-Path $packages ($package.id + '.' + $package.version)
         if (-not (Test-Path -LiteralPath $packageDirectory)) { throw "Restored package folder is missing: $packageDirectory" }
     }
-    $requiredFiles = @(
-        'packages\QuestPDF.2026.9.1\lib\netstandard2.0\QuestPDF.dll',
-        'packages\QuestPDF.2026.9.1\build\net4\QuestPDF.targets',
-        'packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll',
-        'packages\System.Memory.4.6.3\lib\net462\System.Memory.dll',
-        'packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll',
-        'packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll'
-    )
-    foreach ($file in $requiredFiles) { if (-not (Test-Path -LiteralPath $file)) { throw "Required NuGet restore file is missing: $file" } }
-    Write-Host 'PASS: every packages.config dependency and project import has been restored.'
+
+    # Validate the files the project actually references. Package IDs and versions
+    # come from packages.config; file paths come from the project file, so a package
+    # upgrade does not require editing this script.
+    [xml]$project = Get-Content -LiteralPath (Join-Path $projectDirectory 'ReportingModule.Web.csproj') -Raw
+    $requiredPaths = @()
+    $requiredPaths += @($project.SelectNodes("//*[local-name()='HintPath']") | ForEach-Object { $_.InnerText })
+    $requiredPaths += @($project.SelectNodes("//*[local-name()='Import' and @Project]") | ForEach-Object { $_.GetAttribute('Project') } | Where-Object { $_ -match '(^|[\\/])packages([\\/])' })
+    foreach ($reference in $requiredPaths) {
+        $normalized = $reference.Replace('/', '\\')
+        if ($normalized -notmatch '(?:^|\\)packages\\(?<folder>[^\\]+)\\(?<asset>.+)$') { continue }
+        $folder = $Matches.folder
+        $asset = $Matches.asset
+        $id = @($packageVersions.Keys | Sort-Object { $_.Length } -Descending | Where-Object { $folder.StartsWith($_ + '.', [StringComparison]::OrdinalIgnoreCase) } | Select-Object -First 1)
+        if ($id.Count -eq 0) { throw "Project references a NuGet package folder not listed in packages.config: $folder" }
+        $id = [string]$id[0]
+        $version = $folder.Substring($id.Length + 1)
+        if (-not $packageVersions.ContainsKey($id)) { throw "Project references package '$id' but it is missing from packages.config: $reference" }
+        if ($packageVersions[$id] -ne $version) { throw "Project package version for '$id' ($version) does not match packages.config ($($packageVersions[$id]))." }
+        $assetPath = Join-Path $packages ($folder + '\\' + $asset)
+        if (-not (Test-Path -LiteralPath $assetPath)) { throw "Required project package file is missing: $assetPath" }
+    }
+    Write-Host 'PASS: every packages.config dependency and package file referenced by the project has been restored.'
 
     if (-not $SkipBuild) {
         $msbuild = Get-Command msbuild.exe -ErrorAction SilentlyContinue

@@ -51,7 +51,10 @@ class Phase10Checks
    Check(IdentityStore.Authenticate(TestUsername,changedPassword).User!=null,"new password authenticates after change");
    testPassword=changedPassword;
 
-   var permissions=admin.Permissions().Rows.Cast<DataRow>().Select(r=>Convert.ToString(r["PermissionCode"])).ToArray();
+   var permissionRows=admin.Permissions().Rows.Cast<DataRow>().ToArray();
+   var permissions=permissionRows.Select(r=>Convert.ToString(r["PermissionCode"])).ToArray();
+   var permissionLabels=permissionRows.Select(r=>AdminStore.PermissionLabel(Convert.ToString(r["ModuleCode"]),Convert.ToString(r["DisplayName"]))).ToArray();
+   Check(permissionLabels.Distinct(StringComparer.OrdinalIgnoreCase).Count()==permissionLabels.Length,"every permission has a unique visible module-qualified label");
    Check(permissions.Contains("SYSTEM.UNIT.CREATE"),"stable allowlisted unit permission exists");
    admin.SaveRole(null,"PHASE10_EXTRA","Temporary extra permission",new[]{"SYSTEM.UNIT.CREATE"},Admin);
    DataRow extraRow=admin.Roles().Rows.Cast<DataRow>().Single(r=>(string)r["RoleCode"]=="PHASE10_EXTRA");int extra=Convert.ToInt32(extraRow["RoleId"]);

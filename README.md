@@ -34,6 +34,10 @@ CLI, script tải bản chính thức vào thư mục tạm và kiểm tra chữ
 chạy. Có thể truyền `-NuGetPath 'C:\path\nuget.exe'`; dùng `-SkipBuild` nếu chỉ muốn
 khôi phục và kiểm tra gói. Cần kết nối NuGet.org ở lần khôi phục đầu tiên.
 
+Khi nâng/hạ phiên bản NuGet, cập nhật `packages.config`, các `HintPath` và `Import`
+trong `.csproj`, cùng binding redirects trong `Web.config` nếu assembly yêu cầu.
+Sau đó chạy lại script restore để xác nhận các tham chiếu và bản Release đều hợp lệ.
+
 Setup tạo database demo `ReportingModuleDemo`, áp dụng migration đến version 11 và seed dữ liệu. Chạy lại giữ dữ liệu; từ chối database có sẵn không mang dấu demo của dự án. Không dùng dữ liệu công ty thật.
 
 Sau khi chạy setup, tạo Administrator đầu tiên tại máy bằng script dưới đây. Script yêu cầu mật khẩu trực tiếp trong PowerShell dưới dạng secure string và không lưu nó vào dự án:
@@ -67,7 +71,7 @@ Trong PowerShell tại thư mục dự án, chạy `.\tools\run-local.ps1` rồi
 
 Chạy bằng tài khoản Windows truy cập được SQL demo. `run-all.ps1` chạy Phase 3–9, Phase 11 và kiểm tra SQL/PDF/Excel độc lập; khóa chạy song song, bật tài khoản test một lần và tắt tài khoản sau suite. Log nằm ở `artifacts/quality`. Mỗi phase tạo và dọn fixture riêng. Phase 4 giữ PN001/PX001 cho nghiệm thu HANG001: 100 + 50 - 20 = 130; xuất 200 bị từ chối nguyên tử. Không chạy test này trên database nghiệp vụ thật.
 
-`tests/verify-phase8.py` kiểm tra độc lập file kết xuất, cần openpyxl, pypdf, pypdfium2 và Pillow; các thư viện QA có sẵn trong runtime Codex, không phải dependency của ứng dụng. PDF được tạo bằng QuestPDF 2026.9.1 (Community license cho mục đích học tập), dùng phông Times New Roman và chứa chữ tiếng Việt có thể chọn/tìm. Các package runtime và binding redirects nằm trong `packages.config`/`Web.config`. Checklist xem PDF, hộp thoại in và in thử nằm trong [Phase 11](docs/PHASE11.md); kiểm tra PDF tự động không thay thế việc in thật trên máy.
+`tests/verify-phase8.py` kiểm tra độc lập file kết xuất, cần openpyxl, pypdf, pypdfium2 và Pillow; các thư viện QA có sẵn trong runtime Codex, không phải dependency của ứng dụng. PDF được tạo bằng QuestPDF 2026.9.1 (Community license cho mục đích học tập), dùng Times New Roman với các kiểu regular/bold/italic/bold-italic đã cài; nếu phông Times không có, dùng Georgia. Ứng dụng không phân phối các phông Microsoft. Chứng từ nhập mua hiển thị thành tiền theo đồng: từng dòng được làm tròn nửa lên khỏi 0, rồi tổng và số tiền bằng chữ cộng các dòng đã làm tròn. Số liệu lưu vẫn giữ bốn chữ số thập phân. Các package runtime và binding redirects nằm trong `packages.config`/`Web.config`. Checklist xem PDF, hộp thoại in và in thử nằm trong [Phase 11](docs/PHASE11.md); kiểm tra PDF tự động không thay thế việc in thật trên máy.
 
 ## Phạm vi và giới hạn
 

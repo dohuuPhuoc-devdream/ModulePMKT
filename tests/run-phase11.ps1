@@ -19,6 +19,6 @@ try {
  if($LASTEXITCODE -ne 0){throw 'TT99 source CSV validation failed.'}
 } finally {
  foreach($file in @($exe,($exe+'.config'))){if(Test-Path -LiteralPath $file){Remove-Item -LiteralPath $file}}
- if(-not $KeepArtifacts){$pdf=Join-Path $root 'artifacts\phase11\purchase-receipt.pdf';if(Test-Path -LiteralPath $pdf){Remove-Item -LiteralPath $pdf}}
+ if(-not $KeepArtifacts){foreach($name in @('purchase-receipt.pdf','fractional-purchase-receipt.pdf')){$pdf=Join-Path $root ('artifacts\phase11\'+$name);if(Test-Path -LiteralPath $pdf){Remove-Item -LiteralPath $pdf}}}
  Pop-Location
 }
