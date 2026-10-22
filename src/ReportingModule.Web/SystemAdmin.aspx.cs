@@ -86,7 +86,7 @@ namespace ReportingModule.Web
    foreach(DataRow p in store.Permissions().Rows)
    {
     string codeValue=Convert.ToString(p["PermissionCode"]);
-    checks.Items.Add(new ListItem(Convert.ToString(p["DisplayName"]),codeValue){Selected=selected.Contains(codeValue,StringComparer.OrdinalIgnoreCase)});
+    checks.Items.Add(new ListItem(AdminStore.PermissionLabel(Convert.ToString(p["ModuleCode"]),Convert.ToString(p["DisplayName"])),codeValue){Selected=selected.Contains(codeValue,StringComparer.OrdinalIgnoreCase)});
    }
    Root.Controls.Add(new Literal{Text="<h2>Quyền hiệu lực theo vai trò</h2><p class=\"muted\">Các quyền được kết hợp theo phép hợp của mọi vai trò đang bật. Thiếu quyền thì từ chối.</p>"});Root.Controls.Add(checks);
    if(!system)AddButton(Root,"SaveRole","Lưu vai trò và quyền",()=>{int? id=selectedId>0?(int?)selectedId:null;store.SaveRole(id,code.Text,name.Text,checks.Items.Cast<ListItem>().Where(x=>x.Selected).Select(x=>x.Value).ToArray(),UserId);message.Text="Đã lưu vai trò và quyền.";},AdminPermission);

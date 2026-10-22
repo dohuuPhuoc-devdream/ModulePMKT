@@ -11,8 +11,12 @@ text = page.extract_text() or ""
 for value in (
     "Công ty thử", "Địa chỉ thử", "Mã số thuế: 0101234565", "PN-001",
     "Tổng cộng", "160.000", "Một trăm sáu mươi nghìn đồng chẵn", "Người giao hàng",
-    "Người lập phiếu", "Người nhận hàng", "Thủ kho",
+    "PT nhập hàng", "Người nhận hàng", "Thủ kho", "Ngày……tháng……năm…………",
 ):
     assert value in text, f"searchable PDF text missing {value!r}: {text}"
 assert len(text) > 150, f"PDF should contain selectable text, got {len(text)} characters"
+font_names = set()
+for font in (page.get("/Resources") or {}).get("/Font", {}).values():
+    font_names.add(str(font.get_object().get("/BaseFont", "")))
+assert any("TimesNewRoman" in name or "TimesNewRomanPS" in name for name in font_names), f"expected embedded Times New Roman serif font, found {font_names}"
 print("PASS: QuestPDF voucher has searchable Vietnamese text, A4 landscape, totals, and four signature roles")

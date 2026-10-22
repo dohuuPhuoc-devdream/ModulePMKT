@@ -103,6 +103,18 @@ namespace ReportingModule.Web
   {using(var cmd=new SqlCommand("SELECT Username FROM dbo.AppUser WHERE UserId=@id",c,tx)){cmd.Parameters.Add("@id",SqlDbType.UniqueIdentifier).Value=actor;return Convert.ToString(cmd.ExecuteScalar());}}
   public DataTable Permissions()
   {using(var c=Open())using(var cmd=new SqlCommand("SELECT PermissionCode,ModuleCode,FunctionCode,ActionCode,DisplayName,SortOrder FROM dbo.AppPermission ORDER BY ModuleCode,FunctionCode,SortOrder",c)){var t=new DataTable();using(var a=new SqlDataAdapter(cmd))a.Fill(t);return t;}}
+  public static string PermissionLabel(string moduleCode,string displayName)
+  {
+   string module;
+   switch(moduleCode)
+   {
+    case "SYSTEM":module="Hệ thống";break;case "GENERAL":module="Tổng hợp";break;
+    case "AR":module="Phải thu";break;case "AP":module="Phải trả";break;
+    case "SALES":module="Bán hàng";break;case "PURCHASE":module="Mua hàng";break;
+    case "STOCK":module="Tồn kho";break;default:module=moduleCode??"";break;
+   }
+   return String.IsNullOrEmpty(module)?displayName:module+" · "+(displayName??"");
+  }
   public string[] RolePermissions(int role)
   {using(var c=Open())using(var cmd=new SqlCommand("SELECT PermissionCode FROM dbo.AppRolePermission WHERE RoleId=@r",c)){cmd.Parameters.Add("@r",SqlDbType.Int).Value=role;var list=new List<string>();using(var r=cmd.ExecuteReader())while(r.Read())list.Add(r.GetString(0));return list.ToArray();}}
   public void SaveRole(int? id,string code,string name,string[] permissions,Guid actor)

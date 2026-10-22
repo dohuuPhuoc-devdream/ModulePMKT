@@ -1,3 +1,4 @@
+param([switch]$KeepArtifacts)
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 Push-Location $root
@@ -18,6 +19,6 @@ try {
  if($LASTEXITCODE -ne 0){throw 'TT99 source CSV validation failed.'}
 } finally {
  foreach($file in @($exe,($exe+'.config'))){if(Test-Path -LiteralPath $file){Remove-Item -LiteralPath $file}}
- $pdf=Join-Path $root 'artifacts\phase11\purchase-receipt.pdf';if(Test-Path -LiteralPath $pdf){Remove-Item -LiteralPath $pdf}
+ if(-not $KeepArtifacts){$pdf=Join-Path $root 'artifacts\phase11\purchase-receipt.pdf';if(Test-Path -LiteralPath $pdf){Remove-Item -LiteralPath $pdf}}
  Pop-Location
 }

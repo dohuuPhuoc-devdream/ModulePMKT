@@ -134,18 +134,15 @@ Phase 4 acceptance creates PN001 +50 and PX001 -20 through the actual write path
 verifies 130, and rejects issue 200 atomically. The Phase 3–9 regression run and
 independent SQL checks pass this acceptance on the local demo database.
 
-On 2026-10-19, at the user's request, only the existing local `DVDEMO` row was
-updated to use the synthetic display/legal name `Công ty TNHH PicoCorp` and
-practice address `Số 01, Đường Mẫu, Phường An Khánh, Thành phố Hồ Chí Minh`.
-Tax ID, representative, phone and email remain blank because no verified values
-were provided. This local-only update does not change the seed or migration
-history; it is not a verified legal identity.
-
-On 2026-10-21, migration 012 replaced the generic local seed labels with the
-synthetic names above while retaining all codes and balances. Orphaned P3 test
-catalog rows were removed after checking references. Two other test-unit names
-and one generic customer name were updated in the local database only because
-they had linked test records; identifiers and those records were preserved.
+The fresh-install seed (`002-seed.sql`) creates `DVDEMO` with the sample company
+name and readable Vietnamese labels for customers, suppliers and items.
+Migration 012 updates only known placeholder labels and fills the DVDEMO legal
+name/address when those fields are empty or still contain the old placeholder;
+it preserves codes, balances and non-placeholder user values. The current local
+database also received narrowly scoped cleanup of identified orphaned test
+catalog rows and two linked test-unit labels; identifiers and business records
+were preserved. PicoCorp and its practice address are synthetic, unverified
+sample data. Tax ID, representative, phone and email remain blank.
 
 ## Phase 5 upgrade
 setup.sql includes 004-commerce.sql (schema version 3), 008-purchase-workflow.sql (version 7), and 009-purchase-receipt-invoice-uniqueness.sql (version 8). Sales invoices create one linked warehouse issue. Purchase receipts carry supplier and change stock; each receipt can be referenced by at most one purchase invoice, and invoices do not change stock again. Orders do not affect stock. See [Phase 5 defaults](../docs/PHASE5.md). Existing demo stock documents are preserved; legacy combined purchase facts are linked by migration without replaying their stock effect.

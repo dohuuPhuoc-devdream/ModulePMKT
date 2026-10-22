@@ -51,7 +51,8 @@ namespace ReportingModule.Web
   {return new[]{"journal","sales-order","sales-invoice","ar-invoice","purchase-order","purchase-invoice","ap-invoice","purchase-receipt","stock-receipt","stock-issue"}.Contains(screen);}
   public static string[] SignatureLabels(string screen)
   {
-   if(screen=="purchase-receipt"||screen=="stock-receipt") return new[]{"Người giao hàng","Người lập phiếu","Người nhận hàng","Thủ kho"};
+   if(screen=="purchase-receipt") return new[]{"Người giao hàng","PT nhập hàng","Người nhận hàng","Thủ kho"};
+   if(screen=="stock-receipt") return new[]{"Người giao hàng","Người lập phiếu","Người nhận hàng","Thủ kho"};
    if(screen=="stock-issue") return new[]{"Người lập phiếu","Người giao hàng","Người nhận hàng","Thủ kho"};
    return new[]{"Người lập chứng từ","Kế toán","Người duyệt"};
   }

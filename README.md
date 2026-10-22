@@ -11,7 +11,7 @@
 - Thanh toán từng hóa đơn; báo cáo công nợ khách hàng/nhà cung cấp.
 - Phiếu kế toán thủ công và bảng cân đối đại diện với hệ tài khoản thực hành.
 - 11 báo cáo truy vấn SQL thực; Print/PDF/Excel từ toàn bộ kết quả theo điều kiện đã áp dụng.
-- Phiếu nhập mua có model chứng từ dùng chung cho HTML/PDF/Excel và mẫu Excel có công thức tổng tiền, kho, người giao hàng, thông tin đối tác và số tiền bằng chữ. PDF hiện vẫn là ảnh, chưa tìm kiếm/chọn được văn bản.
+- Phiếu nhập mua dùng chung model cho HTML/PDF/Excel; PDF vector có thể chọn/tìm kiếm, phông Times New Roman và đủ vai trò ký/dòng ngày theo mẫu. Excel có công thức tổng tiền, kho, người giao hàng, thông tin đối tác và số tiền bằng chữ.
 
 ## Chuẩn bị và chạy
 
@@ -22,9 +22,17 @@ Máy hiện tại đã có IIS Express và WebApplication targets sau khi bổ s
 Từ thư mục gốc:
 
 ```powershell
+.\tools\restore-packages.ps1
 sqlcmd -S '.\SQLEXPRESS' -E -C -b -l 10 -f 65001 -i database/setup.sql
 & 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe' ReportingModule.sln /t:Build /p:Configuration=Release /nologo /verbosity:minimal
 ```
+
+`packages/` bị loại khỏi git. Trên bản clone mới, `restore-packages.ps1` dùng NuGet
+CLI để khôi phục đúng các phiên bản trong `src/ReportingModule.Web/packages.config`,
+kiểm tra DLL/targets mà project tham chiếu, rồi build Release. Nếu máy chưa có NuGet
+CLI, script tải bản chính thức vào thư mục tạm và kiểm tra chữ ký Microsoft trước khi
+chạy. Có thể truyền `-NuGetPath 'C:\path\nuget.exe'`; dùng `-SkipBuild` nếu chỉ muốn
+khôi phục và kiểm tra gói. Cần kết nối NuGet.org ở lần khôi phục đầu tiên.
 
 Setup tạo database demo `ReportingModuleDemo`, áp dụng migration đến version 11 và seed dữ liệu. Chạy lại giữ dữ liệu; từ chối database có sẵn không mang dấu demo của dự án. Không dùng dữ liệu công ty thật.
 
@@ -59,7 +67,7 @@ Trong PowerShell tại thư mục dự án, chạy `.\tools\run-local.ps1` rồi
 
 Chạy bằng tài khoản Windows truy cập được SQL demo. `run-all.ps1` chạy Phase 3–9, Phase 11 và kiểm tra SQL/PDF/Excel độc lập; khóa chạy song song, bật tài khoản test một lần và tắt tài khoản sau suite. Log nằm ở `artifacts/quality`. Mỗi phase tạo và dọn fixture riêng. Phase 4 giữ PN001/PX001 cho nghiệm thu HANG001: 100 + 50 - 20 = 130; xuất 200 bị từ chối nguyên tử. Không chạy test này trên database nghiệp vụ thật.
 
-`tests/verify-phase8.py` kiểm tra độc lập file kết xuất, cần openpyxl, pypdf, pypdfium2 và Pillow; các thư viện QA có sẵn trong runtime Codex, không phải dependency của ứng dụng. PDF được tạo bằng QuestPDF 2026.9.1 (Community license cho mục đích học tập) và nhúng chữ tiếng Việt có thể chọn/tìm. Các package runtime và binding redirects nằm trong `packages.config`/`Web.config`.
+`tests/verify-phase8.py` kiểm tra độc lập file kết xuất, cần openpyxl, pypdf, pypdfium2 và Pillow; các thư viện QA có sẵn trong runtime Codex, không phải dependency của ứng dụng. PDF được tạo bằng QuestPDF 2026.9.1 (Community license cho mục đích học tập), dùng phông Times New Roman và chứa chữ tiếng Việt có thể chọn/tìm. Các package runtime và binding redirects nằm trong `packages.config`/`Web.config`. Checklist xem PDF, hộp thoại in và in thử nằm trong [Phase 11](docs/PHASE11.md); kiểm tra PDF tự động không thay thế việc in thật trên máy.
 
 ## Phạm vi và giới hạn
 
@@ -70,7 +78,7 @@ Chạy bằng tài khoản Windows truy cập được SQL demo. `run-all.ps1` c
 - Sổ tổng hợp nhập thủ công, chưa tự hạch toán từ kho/mua/bán/thanh toán. Bảng cân đối và tài khoản chỉ mang tính thực hành.
 - PDF báo cáo và chứng từ là văn bản vector có thể tìm/chọn. Kết xuất tối đa 5.000 dòng; quá giới hạn báo lỗi, không cắt dữ liệu âm thầm.
 - Danh mục tài khoản TT99 đã được nhận và kiểm tra cấu trúc trong `database/seed/tt99-accounts.csv`, nhưng chưa nạp vào cơ sở dữ liệu. CSV không có tính chất dư Nợ/Có/lưỡng tính cần cho schema; không suy đoán từ nhóm tài khoản.
-- Dữ liệu mẫu dùng tên đơn vị, khách hàng, nhà cung cấp, mặt hàng và tài khoản thực hành dễ đọc. Mã số thuế và chi tiết liên hệ không được tự tạo. Tên hiển thị được cập nhật bởi migration `database/012-demo-display-names.sql`; dữ liệu đơn vị PicoCorp chỉ là dữ liệu cục bộ, chưa phải thông tin pháp lý đã xác minh.
+- Dữ liệu mẫu dùng tên đơn vị, khách hàng, nhà cung cấp, mặt hàng và tài khoản thực hành dễ đọc. Seed `database/002-seed.sql` áp dụng cho database mới; migration `database/012-demo-display-names.sql` đổi nhãn placeholder cũ và chỉ điền tên pháp lý/địa chỉ DVDEMO khi các trường còn trống hoặc chứa placeholder. Thông tin PicoCorp là dữ liệu mẫu chưa được xác minh; mã số thuế và chi tiết liên hệ vẫn để trống.
 - Snapshot kết xuất thuộc phiên, hết hạn sau 20 phút, tối đa 8 snapshot. Sửa ô lọc mà chưa áp dụng không đổi dữ liệu kết xuất.
 
 ## Tài liệu

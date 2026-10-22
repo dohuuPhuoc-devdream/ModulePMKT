@@ -1,7 +1,9 @@
 using System;
 using System.Data;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -13,6 +15,8 @@ namespace ReportingModule.Web
  public static class ReportPdf
  {
   private static readonly CultureInfo Vi = CultureInfo.GetCultureInfo("vi-VN");
+  private static readonly object FontLock = new object();
+  private static bool timesFontRegistered;
 
   public static byte[] Export(OutputSnapshot snapshot)
   {
@@ -30,11 +34,20 @@ namespace ReportingModule.Web
   private static byte[] ExportVoucher(VoucherModel voucher)
   {
    QuestPDF.Settings.License=LicenseType.Community;
+   lock(FontLock)
+   {
+    if(!timesFontRegistered)
+    {
+     string fontPath=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts),"times.ttf");
+     if(File.Exists(fontPath)) FontManager.RegisterFontFromFile(fontPath);
+     timesFontRegistered=true;
+    }
+   }
    return Document.Create(document=>document.Page(page=>
    {
     page.Size(PageSizes.A4.Landscape());
     page.Margin(28);
-    page.DefaultTextStyle(style=>style.FontSize(9).FontColor(Colors.Black));
+    page.DefaultTextStyle(style=>style.FontFamily("Times New Roman").FontSize(9).FontColor(Colors.Black));
     page.Header().Column(header=>
     {
      if(!String.IsNullOrWhiteSpace(voucher.UnitName)) header.Item().Text(voucher.UnitName).SemiBold().FontSize(10);
@@ -92,6 +105,8 @@ namespace ReportingModule.Web
       content.Item().AlignRight().Text(text=>{text.Span((voucher.TotalLabel??"Tổng cộng")+"     ").SemiBold();text.Span(total).SemiBold();});
      if(!String.IsNullOrWhiteSpace(voucher.AmountInWords))
       content.Item().Text("Số tiền viết bằng chữ: "+voucher.AmountInWords).Italic();
+     if(voucher.DocumentType=="purchase-receipt")
+      content.Item().PaddingTop(8).AlignRight().Text("Ngày……tháng……năm…………");
      content.Item().PaddingTop(13).Row(row=>
      {
       var roles=voucher.SignatureLabels??ReportOutput.SignatureLabels(voucher.DocumentType);
