@@ -24,6 +24,11 @@ namespace ReportingModule.Web
    if(snapshot==null) throw new ArgumentNullException("snapshot");
    if(snapshot.Data==null || snapshot.Columns==null) throw new ArgumentException("Bản kết xuất không hợp lệ.");
    if(snapshot.Data.Rows.Count>5000) throw new ArgumentException("Tối đa 5000 dòng; hãy thu hẹp bộ lọc.");
+   // A Web Forms app is hosted from its site root, while NuGet places
+   // QuestPDF's optional Lato archive under bin. We explicitly register a
+   // locally installed serif family below, so allow QuestPDF to use that
+   // registered fallback when its optional default archive is absent.
+   QuestPDF.Settings.ThrowOnMissingFontFamilies=false;
    if(ReportOutput.IsDocument(snapshot.Screen))
    {
     if(snapshot.Screen=="purchase-receipt") ReportOutput.ApplyVoucherModel(snapshot);
@@ -121,10 +126,14 @@ namespace ReportingModule.Web
   private static byte[] ExportReport(OutputSnapshot snapshot)
   {
    QuestPDF.Settings.License=LicenseType.Community;
+   // QuestPDF 2026 no longer discovers system fonts implicitly. Register the
+   // same installed serif family used by voucher templates before rendering
+   // reports, so a missing bundled Lato archive cannot break PDF downloads.
+   lock(FontLock) { EnsureVoucherFonts(); }
    return Document.Create(document=>document.Page(page=>
    {
     page.Size(PageSizes.A4.Landscape());page.Margin(28);
-    page.DefaultTextStyle(style=>style.FontSize(8).FontColor(Colors.Black));
+    page.DefaultTextStyle(style=>style.FontFamily(voucherFontFamily).FontSize(8).FontColor(Colors.Black));
     page.Header().Column(header=>
     {
      header.Item().Text(snapshot.Title??"Báo cáo").Bold().FontSize(16);
